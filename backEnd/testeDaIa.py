@@ -1,7 +1,5 @@
 import requests
 import sqlite3
-import pyttsx3
-import speech_recognition as sr
 import os
 from classificadorDaWeb.classificador_busca_web import deve_buscar_na_web
 from banco.banco import (
