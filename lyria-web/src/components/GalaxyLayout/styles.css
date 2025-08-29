@@ -1,0 +1,27 @@
+/* O contêiner principal que segura tudo e define o contexto de posicionamento */
+.galaxy-layout-container {
+  width: 100vw;
+  height: 100vh;
+  position: relative; /* Essencial para o posicionamento absoluto dos filhos */
+  background-color: #000000; /* Fundo preto visível caso o Galaxy falhe */
+}
+
+/* O contêiner do fundo com as estrelas */
+.galaxy-layout-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1; /* Camada 1: O fundo */
+}
+
+/* O contêiner do conteúdo da página (Chat, Home, etc.) */
+.galaxy-layout-content {
+  position: relative; /* Precisa de 'position' para o z-index funcionar */
+  z-index: 2; /* Camada 2: O conteúdo, fica na FRENTE do fundo */
+  width: 100%;
+  height: 100%;
+  /* Permite que o conteúdo interno (como o chat) tenha sua própria rolagem se necessário */
+  overflow: auto;
+}

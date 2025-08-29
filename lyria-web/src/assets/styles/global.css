@@ -1,0 +1,34 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@500&display=swap");
+
+:root {
+  --color-white: #FFFFFF;
+  --color-off-white: #f6f4f1;
+  --color-light-purple: #c9b6f2;
+  --color-purple-v1: #6344a6;
+  --color-purple-v2: #442f73;
+  --color-purple-hover: #7e5ac9;
+  --color-dark-purple: #261a40;
+  --color-dark-purple-v2: #130f2f;
+  --color-dark-black: #0d0d0d;
+  --color-black: #000000;
+  --color-light-grey: #d1d1d1;
+  --color-grey: #888888;
+  --color-dark-grey: #4B4B4B;
+
+  --font-family-main: "Montserrat", sans-serif;
+  --font-family-secondary: "Poppins", sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: var(--font-family-main);
+}
+
+body {
+  background-color: #000; /* Garante que não haja "flash branco" */
+  overflow-x: hidden;
+   overflow-y:hidden /* Previne a barra de rolagem horizontal */
+}

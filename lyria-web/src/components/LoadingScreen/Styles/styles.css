@@ -1,0 +1,58 @@
+/* O contêiner principal da página de carregamento */
+.loading-container {
+  /* Define que ele deve ocupar todo o espaço que o GalaxyLayout oferece */
+  width: 100%;
+  height: 100%;
+
+  /* Usa flexbox para centralizar o conteúdo (a caixa com o spinner) no meio da tela */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  /* MUITO IMPORTANTE: O fundo deve ser transparente para que as estrelas do layout apareçam */
+  background-color: transparent;
+}
+
+/* A caixa com o spinner e o texto "PREPARANDO A IMERSÃO..." */
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 2rem;
+  color: white; /* Define a cor do texto */
+  background: rgba(13, 15, 47, 0.25);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 20px;
+  border: 1.5px solid rgba(201, 182, 242, 0.2);
+}
+
+.loading-content h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--color-light-purple);
+}
+
+.loading-content p {
+  font-size: 1rem;
+  color: var(--color-off-white);
+  opacity: 0.8;
+}
+
+.loading-spinner {
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  border-left-color: var(--color-light-purple);
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  animation: spin 1.2s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}   

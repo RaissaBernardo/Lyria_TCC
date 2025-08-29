@@ -1,0 +1,307 @@
+.galaxy-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  z-index: -1;
+  overflow: hidden;
+  background-color: black;
+}
+
+.app-header {
+  position: fixed;
+  top: 48px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70%;
+  max-width: 1600px;
+  z-index: 10;
+  background: rgba(34, 34, 34, 0);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 50px;
+  border: 1px solid rgba(102, 102, 102, 0.87);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 65px;
+  padding: 0 30px;
+  transition: all 0.3s ease; /* Adicionado para suavizar a transição */
+}
+
+.logo-link {
+  display: flex;
+  align-items: center;
+  height: 90%;
+}
+
+.app-header .logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.logo-image {
+  height: 60%;
+  width: auto;
+  transition: height 0.3s ease; /* Adicionado para suavizar a transição */
+}
+
+.app-header nav {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
+.app-header nav a {
+  text-decoration: none;
+  color: #d1d1d1;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.app-header nav a:hover {
+  color: white;
+}
+
+.App {
+  position: relative;
+  display: flex;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.main-content {
+  position: relative;
+  align-items: center;
+  z-index: 1;
+  padding: 2rem;
+  color: black;
+}
+
+#comecar {
+  border-radius: 8rem;
+  margin-top: 5%;
+  text-align: center;
+  padding: 0.8rem;
+  font-family: "Poppins", sans-serif;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: rgb(0, 0, 0);
+  background-color: white;
+  letter-spacing: 0.5px;
+  padding: 20px 70px;
+  border-radius: 50px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+#comecar:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2);
+  background-color: #f0f0f0;
+}
+
+.linkSemEstilo {
+  text-decoration: none;
+  color: inherit;
+}
+
+#espaço {
+  padding: 5px;
+}
+
+#sobre {
+  border-radius: 8rem;
+  margin-top: 5%;
+  margin-left: 10px;
+  padding: 0.8rem;
+  font-family: "Poppins", sans-serif;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: rgb(136, 136, 136);
+  letter-spacing: 0.5px;
+  background-color: rgba(32, 32, 32, 0.731);
+  padding: 20px 59px;
+  border-radius: 50px;
+  border: 1.8px solid rgb(75, 75, 75);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+#sobre:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  color: white;
+  border-color: #c9b6f2;
+}
+
+
+#frase_efeito {
+  text-align: center;
+  align-items: center;
+  color: white;
+  margin-top: 5%;
+  font-size: 40px;
+}
+
+.info-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeInBackdrop 0.4s ease;
+}
+
+.info-modal-content {
+  position: relative;
+  width: 90%;
+  max-width: 600px;
+  padding: 2.5rem;
+  color: white;
+  text-align: left;
+  
+  background: rgba(13, 15, 47, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1.5px solid rgba(201, 182, 242, 0.2);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+
+  animation: slideInUp 0.5s ease-out;
+}
+
+.info-modal-content h2 {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  color: var(--color-light-purple);
+}
+
+.info-modal-content h3 {
+  font-size: 1.2rem;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  color: white;
+  border-left: 3px solid var(--color-light-purple);
+  padding-left: 10px;
+}
+
+.info-modal-content p {
+  line-height: 1.6;
+  margin-bottom: 1rem;
+  color: rgba(246, 244, 241, 0.85);
+}
+
+.info-modal-content ul {
+    list-style-position: inside;
+    padding-left: 10px;
+}
+
+.info-modal-content li {
+    margin-bottom: 0.5rem;
+}
+
+.close-modal-btn {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.close-modal-btn:hover {
+  color: white;
+  transform: rotate(90deg);
+}
+
+@keyframes fadeInBackdrop {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* --- REGRAS DE RESPONSIVIDADE ADICIONADAS --- */
+
+/* Para tablets e telas menores */
+@media (max-width: 992px) {
+  .app-header {
+    width: 90%; /* Ocupa mais espaço na largura */
+    top: 20px;   /* Sobe um pouco */
+  }
+
+  .main-content {
+    width: 100%;
+    margin-left: 0;
+    padding: 2rem;
+  }
+
+  #frase_efeito {
+    font-size: 32px;
+  }
+}
+
+/* Para celulares */
+@media (max-width: 768px) {
+  .app-header {
+    height: 60px; /* Diminui a altura */
+    padding: 0 20px; /* Diminui o espaçamento interno */
+  }
+
+  .logo-image {
+    height: 50%; /* Diminui o tamanho da logo */
+  }
+
+  .app-header nav {
+    gap: 20px; /* Diminui o espaço entre os links de navegação */
+  }
+
+  #frase_efeito {
+    font-size: 28px;
+  }
+
+  #comecar, #sobre {
+    font-size: 1rem; /* Diminui o tamanho da fonte nos botões */
+    padding: 18px 40px; /* Ajusta o padding dos botões */
+  }
+}
+
+/* Para celulares bem pequenos */
+@media (max-width: 480px) {
+  .app-header nav a {
+    font-size: 0.9rem; /* Diminui ainda mais a fonte da navegação */
+  }
+
+  /* Esconde o texto da logo, deixando só a imagem se necessário,
+     ou apenas reduz mais o tamanho. Por enquanto, vamos só reduzir. */
+  .logo-image {
+    height: 45%;
+  }
+}
