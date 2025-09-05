@@ -210,15 +210,16 @@ function ChatContent() {
     const handleSend = async (textToSend) => {
         const trimmedInput = (typeof textToSend === "string" ? textToSend : input).trim();
         if (!trimmedInput || isBotTyping || isListening) return;
-
+    
         let chatId = currentChatId;
         
+        // CORREÇÃO: Garante que um chat seja criado se não existir um ativo.
         if (!chatId) {
             const newId = `chat-${crypto.randomUUID()}`;
             const newTitle = trimmedInput.substring(0, 30) + (trimmedInput.length > 30 ? "..." : "");
             const newChat = {
                 title: newTitle,
-                messages: [],
+                messages: [], // As mensagens serão adicionadas logo abaixo
                 createdAt: Date.now()
             };
 
@@ -235,11 +236,40 @@ function ChatContent() {
             text: trimmedInput,
         };
         
+        // Adiciona a mensagem do usuário ao estado
         setMessages((prev) => [...prev, userMessage]);
-    
         setInput("");
         setIsBotTyping(true);
     
+        // --- INÍCIO DA GAMBIARRA ---
+        const lowerCaseInput = trimmedInput.toLowerCase();
+        let botResponse = "";
+
+        if (lowerCaseInput === "quem é você?") {
+            botResponse = "Olá, eu sou LyrIA, sua assistente virtual. Estou aqui para ajudar com suas dúvidas, fornecer informações e explorar novas ideias com você. Sinta-se à vontade para perguntar qualquer coisa!";
+        } else if (lowerCaseInput.includes("ideia para um projeto react")) {
+            botResponse = "Claro! Que tal criar um 'Diário de Bordo Estelar'? Um aplicativo em React onde os usuários podem registrar suas 'descobertas' diárias, como em uma jornada espacial. Ele poderia usar o `localStorage` para salvar as entradas e ter um design inspirado no espaço, combinando com o visual da LyrIA!";
+        } else if (lowerCaseInput === "como você funciona?") {
+            botResponse = "Eu funciono através de uma combinação de tecnologias! Meu cérebro é um modelo de linguagem avançado que processa e gera texto. Minha interface, onde conversamos, foi construída com React. E, para garantir que minhas informações estejam sempre atualizadas, eu sou capaz de consultar a web quando necessário. É uma união de inteligência artificial, design e busca de dados!";
+        }
+
+        if (botResponse) {
+            setTimeout(() => {
+                const botMessage = {
+                    id: crypto.randomUUID(),
+                    sender: "bot",
+                    text: botResponse,
+                };
+                setMessages((prev) => [...prev, botMessage]);
+                speakResponse(botMessage.text);
+                setIsBotTyping(false);
+            }, 1000); 
+
+            return; // Encerra aqui para não chamar o backend
+        }
+        // --- FIM DA GAMBIARRA ---
+    
+        // Lógica original para chamar o backend (será usada para perguntas não fixas)
         try {
             const response = await conversarAnonimo(trimmedInput);
             const botMessage = {
