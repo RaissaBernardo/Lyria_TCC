@@ -1,19 +1,72 @@
 import { useState } from 'react';
 import './Styles/styles.css';
-import { Link } from 'react-router-dom';
-// import Galaxy from '../../components/Galaxy/Galaxy.jsx'; // <--- REMOVIDO
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import LoginPrompt from '../../components/LoginPrompt';
+import { baseURL } from '../../services/api';
 import { FaTimes } from "react-icons/fa";
+import { FiMail, FiGithub } from "react-icons/fi";
 import logoImage from '/img/LogoBranca.png';
 
 function InitialScreen() {
   const [isInfoVisible, setInfoVisible] = useState(false);
+  const [isContactModalVisible, setContactModalVisible] = useState(false);
+  const [isLoginPromptVisible, setLoginPromptVisible] = useState(false);
+  const [isModalClosing, setIsModalClosing] = useState(false);
+  const { isAuthenticated, user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [dropdownVisible, setDropdownVisible] = useState(false);
 
   const toggleInfoModal = () => {
-    setInfoVisible(!isInfoVisible);
+    if (isInfoVisible) {
+      setIsModalClosing(true);
+      setTimeout(() => {
+        setInfoVisible(false);
+        setIsModalClosing(false);
+      }, 500); // Corresponde à duração da animação de saída
+    } else {
+      setInfoVisible(true);
+    }
+  };
+
+  const toggleContactModal = () => {
+    if (isContactModalVisible) {
+      setIsModalClosing(true);
+      setTimeout(() => {
+        setContactModalVisible(false);
+        setIsModalClosing(false);
+      }, 500);
+    } else {
+      setContactModalVisible(true);
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    setDropdownVisible(false);
+  };
+
+  const handleStartClick = () => {
+    if (isAuthenticated) {
+      navigate('/chat');
+    } else {
+      setLoginPromptVisible(true);
+    }
+  };
+
+  const handleContinueAsGuest = () => {
+    navigate('/chat');
   };
 
   return (
     <div className="App">
+      {isLoginPromptVisible && (
+        <LoginPrompt
+          onDismiss={() => setLoginPromptVisible(false)}
+          onContinueAsGuest={handleContinueAsGuest}
+          showContinueAsGuest={true}
+        />
+      )}
       <header className="app-header">
         <Link to={'/'} className="logo-link">
           <div className="logo">
@@ -21,12 +74,35 @@ function InitialScreen() {
           </div>
         </Link>
         <nav>
-          <Link to={'/RegistrationAndLogin'}>Entrar</Link>
-          <a href="#">Contato</a>
+          {isAuthenticated ? (
+            <div className="user-profile-section">
+              <div
+                className="user-indicator"
+                onClick={() => setDropdownVisible(!dropdownVisible)}
+              >
+                {user?.foto_perfil_url ? (
+                  <img
+                    src={`${baseURL}${user.foto_perfil_url}`}
+                    alt="Foto de perfil"
+                    className="user-profile-pic"
+                  />
+                ) : (
+                  user?.nome?.charAt(0).toUpperCase()
+                )}
+              </div>
+              {dropdownVisible && (
+                <div className="user-dropdown-initial">
+                  <Link to="/profile" className="dropdown-link">Ver Perfil</Link>
+                  <button onClick={handleLogout}>Sair</button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link to={'/RegistrationAndLogin'}>Entrar</Link>
+          )}
+          <button onClick={toggleContactModal} className="nav-button">Contato</button>
         </nav>
       </header>
-
-      {/* O <Galaxy /> foi removido daqui porque o GalaxyLayout já o fornece */}
 
       <div className="main-content">
         <div id="frase_efeito">
@@ -34,11 +110,9 @@ function InitialScreen() {
         </div>
         <span id="espaço"></span>
         <div className="container_espaço">
-          <Link className="linkSemEstilo" to={'/loading'}>
-            <button id="comecar">
-              Começar
-            </button>
-          </Link>
+          <button id="comecar" onClick={handleStartClick}>
+            Começar
+          </button>
           <button id="sobre" onClick={toggleInfoModal}>
             Saiba Mais
           </button>
@@ -46,8 +120,8 @@ function InitialScreen() {
       </div>
 
       {isInfoVisible && (
-        <div className="info-modal-backdrop">
-          <div className="info-modal-content">
+        <div className={`info-modal-backdrop ${isModalClosing ? 'fade-out' : ''}`}>
+          <div className={`info-modal-content ${isModalClosing ? 'slide-out' : ''}`}>
             <button className="close-modal-btn" onClick={toggleInfoModal}>
               <FaTimes />
             </button>
@@ -65,6 +139,32 @@ function InitialScreen() {
               <li>Interface amigável e personalizável.</li>
               <li>Integração com diversas ferramentas.</li>
             </ul>
+          </div>
+        </div>
+      )}
+
+      {isContactModalVisible && (
+        <div className={`info-modal-backdrop ${isModalClosing ? 'fade-out' : ''}`}>
+          <div className={`info-modal-content ${isModalClosing ? 'slide-out' : ''}`}>
+            <button className="close-modal-btn" onClick={toggleContactModal}>
+              <FaTimes />
+            </button>
+            <h2>Contato</h2>
+            <div className="contact-info">
+              <p>
+                Para dúvidas, sugestões ou suporte, entre em contato conosco através dos seguintes canais:
+              </p>
+              <div className="contact-links">
+                <a href="mailto:contato@lyria.ai" className="contact-link-item">
+                  <FiMail />
+                  <span>contato@lyria.ai</span>
+                </a>
+                <a href="https://github.com/LyrIA-Project" target="_blank" rel="noopener noreferrer" className="contact-link-item">
+                  <FiGithub />
+                  <span>LyrIA-Project</span>
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       )}

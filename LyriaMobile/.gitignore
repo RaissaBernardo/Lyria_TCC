@@ -1,0 +1,14 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Jest
+coverage/
+
+# Metro
+.metro-cache/
+
+# Other
+.DS_Store
+*.js.map

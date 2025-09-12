@@ -1,0 +1,14 @@
+@keyframes page-slide-in-bottom {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.page-animation-wrapper {
+  animation: page-slide-in-bottom 0.6s ease-out forwards;
+}

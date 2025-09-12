@@ -39,3 +39,58 @@
 .main-nav a:hover {
   color: #2d2d2d;
 }
+
+/* Estilos para a seção do perfil do usuário */
+.user-profile-section {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.user-indicator {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--color-purple-v1);
+  color: var(--color-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.user-indicator:hover {
+  background-color: var(--color-purple-hover);
+}
+
+.user-dropdown {
+  position: absolute;
+  top: 50px; /* Abaixo do indicador */
+  right: 0;
+  background-color: var(--color-white);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 8px;
+  z-index: 110;
+  border: 1px solid #eee;
+}
+
+.user-dropdown button {
+  background-color: transparent;
+  border: none;
+  padding: 10px 20px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--color-dark-grey);
+  transition: background-color 0.2s;
+  border-radius: 4px;
+}
+
+.user-dropdown button:hover {
+  background-color: var(--color-off-white);
+}

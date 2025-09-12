@@ -47,18 +47,41 @@
 
   /* Animação de entrada */
   transition: all 0.4s ease-in-out;
-  animation: fadeIn 1s ease;
 }
 
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: scale(0.95);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
+.form-content {
+  /* Adicionado para garantir que o conteúdo seja empilhado corretamente se necessário */
+  width: 100%;
+}
+
+@keyframes form-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes form-fade-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+.fade-in {
+  animation: form-fade-in 0.4s ease-in forwards;
+}
+
+.fade-out {
+  animation: form-fade-out 0.4s ease-out forwards;
 }
 
 .form-title {

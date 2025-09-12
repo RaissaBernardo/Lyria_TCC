@@ -1,0 +1,102 @@
+.login-prompt-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.login-prompt-content {
+  background: var(--color-dark-purple-v2);
+  padding: 2.5rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+  color: var(--color-off-white);
+  animation: slide-up 0.3s ease-out;
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.login-prompt-content h3 {
+  font-size: 1.5rem;
+  color: var(--color-light-purple);
+  margin-bottom: 1rem;
+}
+
+.login-prompt-content p {
+  font-size: 1rem;
+  line-height: 1.5;
+  margin-bottom: 2rem;
+}
+
+.login-btn {
+  background-color: var(--color-purple-v1);
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.login-btn:hover {
+  background-color: var(--color-purple-hover);
+}
+
+.guest-btn {
+  background-color: transparent;
+  color: var(--color-light-purple);
+  padding: 12px 24px;
+  border: 1px solid var(--color-light-purple);
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.guest-btn:hover {
+  background-color: var(--color-light-purple);
+  color: var(--color-dark-purple-v2);
+}
+
+.dismiss-btn {
+  background: none;
+  border: none;
+  color: var(--color-light-grey);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.dismiss-btn:hover {
+  color: var(--color-off-white);
+}

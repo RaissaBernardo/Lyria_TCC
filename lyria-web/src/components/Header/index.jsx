@@ -1,25 +1,24 @@
-// src/components/Header/index.jsx
-
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import './Styles/styles.css';
 
 function Header() {
-  // NOVO: Função para controlar a rolagem
+  const { isAuthenticated, logout, user } = useAuth();
+  const navigate = useNavigate();
+  const [dropdownVisible, setDropdownVisible] = useState(false);
+
   const handleScrollTo = (event, targetId) => {
-    // 1. Previne o comportamento padrão do link (que é só mudar a URL)
     event.preventDefault();
-
-    // 2. Encontra o elemento na página pelo ID que definimos
     const targetElement = document.getElementById(targetId);
-
-    // 3. Se o elemento existir, rola a tela até ele
     if (targetElement) {
-      targetElement.scrollIntoView({
-        behavior: 'smooth', // Define a animação de rolagem suave
-        block: 'start'      // Alinha o topo do elemento com o topo da tela
-      });
+      targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/RegistrationAndLogin'); // Redireciona após o logout
   };
 
   return (
@@ -28,17 +27,29 @@ function Header() {
         <h1 className="logo">LYRIA</h1>
         <nav className="main-nav">
           <Link to="/">Página Inicial</Link>
-          
-          {/* MUDANÇA: Adicionamos um evento onClick para chamar nossa função */}
-          <a 
-            href="#nossa-historia" 
-            onClick={(e) => handleScrollTo(e, 'nossa-historia')}
-          >
+          <a href="#nossa-historia" onClick={(e) => handleScrollTo(e, 'nossa-historia')}>
             Sobre
           </a>
-          
           <Link to="/chat">Chat</Link>
-          <Link to="/RegistrationAndLogin">Entrar</Link>
+
+          {isAuthenticated ? (
+            <div className="user-profile-section">
+              <div
+                className="user-indicator"
+                onClick={() => setDropdownVisible(!dropdownVisible)}
+              >
+                {/* Pega a primeira letra do nome do usuário para a bolinha */}
+                {user?.nome?.charAt(0).toUpperCase()}
+              </div>
+              {dropdownVisible && (
+                <div className="user-dropdown">
+                  <button onClick={handleLogout}>Sair</button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link to="/RegistrationAndLogin">Entrar</Link>
+          )}
         </nav>
       </div>
     </header>

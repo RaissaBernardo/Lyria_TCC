@@ -13,8 +13,9 @@ from banco.banco import (
 
 LIMITE_HISTORICO = 12
 SERPAPI_KEY = os.getenv("KEY_SERP_API")
-OLLAMA_HOST = os.getenv("HOST_OLLAMA")
-OLLAMA_MODEL = "gemma3n:latest"
+OLLAMA_HOST = os.getenv("HOST_OLLAMA", "http://localhost:11434")
+OLLAMA_TIMEOUT = int(os.getenv("OLLAMA_TIMEOUT", "60"))
+OLLAMA_MODEL = "gemma3:1b"
 
 def carregar_memorias(usuario):
     from banco.banco import carregar_memorias as carregar_memorias_db
@@ -56,7 +57,7 @@ def perguntar_ollama(pergunta, conversas, memorias, persona, contexto_web=None):
         response = requests.post(
             f"{OLLAMA_HOST}/api/generate",
             json=payload,
-            timeout=60, 
+            timeout=OLLAMA_TIMEOUT, 
             headers={'Content-Type': 'application/json'}
         )
         
@@ -74,7 +75,7 @@ def perguntar_ollama(pergunta, conversas, memorias, persona, contexto_web=None):
         return resposta
         
     except requests.exceptions.Timeout:
-        print("Timeout - Ollama demorou mais que 45s")
+        print(f"Timeout - Ollama demorou mais que {OLLAMA_TIMEOUT}s")
         return "Desculpe, estou processando mais devagar hoje. Pode repetir a pergunta?"
         
     except requests.exceptions.ConnectionError:
@@ -87,7 +88,9 @@ def perguntar_ollama(pergunta, conversas, memorias, persona, contexto_web=None):
         
     except Exception as e:
         print(f"Erro inesperado: {e}")
-        return "Erro interno. Tente novamente em alguns instantes."
+        # Em vez de retornar uma string de erro, propaga o erro.
+        # Isso impede que o erro seja salvo como uma mensagem válida no histórico.
+        raise ConnectionError(f"Falha ao se comunicar com o serviço de IA: {e}")
 
 def verificar_ollama_status():
     try:

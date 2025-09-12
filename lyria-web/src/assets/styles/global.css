@@ -30,5 +30,5 @@
 body {
   background-color: #000; /* Garante que não haja "flash branco" */
   overflow-x: hidden;
-   overflow-y:hidden /* Previne a barra de rolagem horizontal */
+  overflow-y: hidden; /* A rolagem é controlada pelo .galaxy-layout-content */
 }

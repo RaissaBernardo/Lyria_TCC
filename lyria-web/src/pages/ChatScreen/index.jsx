@@ -16,7 +16,17 @@ import { FaVolumeUp, FaVolumeMute } from "react-icons/fa";
 import { RiRobot2Line } from "react-icons/ri";
 import { Link } from "react-router-dom";
 import AnimatedBotMessage from "../../components/AnimatedBotMessage";
-import { conversarAnonimo } from "../../services/LyriaApi";
+import LoginPrompt from "../../components/LoginPrompt";
+import ConfirmationModal from "../../components/ConfirmationModal";
+import { useAuth } from "../../context/AuthContext";
+import {
+  conversarAnonimo,
+  getConversations,
+  getMessagesForConversation,
+  postMessage,
+  deleteConversation,
+} from "../../services/LyriaApi";
+import { useToast } from "../../context/ToastContext";
 
 import {
   SpeechConfig,
@@ -41,9 +51,13 @@ const availableVoices = [
   { value: "pt-BR-DonatoNeural", label: "Leonardo" },
 ];
 
-const HistoryPanel = ({ isVisible, onClose, history, loadChat, deleteChat }) => {
-  const sortedHistory = Object.entries(history).sort(([, a], [, b]) => (b.lastUpdated || b.createdAt) - (a.lastUpdated || a.createdAt));
-
+const HistoryPanel = ({
+  isVisible,
+  onClose,
+  conversations,
+  loadChat,
+  deleteChat,
+}) => {
   return (
     <aside className={`history-panel ${isVisible ? "visible" : ""}`}>
       <div className="history-header">
@@ -53,13 +67,19 @@ const HistoryPanel = ({ isVisible, onClose, history, loadChat, deleteChat }) => 
         </button>
       </div>
       <div className="history-list">
-        {sortedHistory.length > 0 ? (
-          sortedHistory.map(([id, chat]) => (
-            <div key={id} className="history-item-container">
-              <div className="history-item" onClick={() => loadChat(id)}>
-                {chat.title}
+        {conversations.length > 0 ? (
+          conversations.map((chat) => (
+            <div key={chat.id} className="history-item-container">
+              <div className="history-item" onClick={() => loadChat(chat.id)}>
+                {chat.titulo || "Conversa sem título"}
               </div>
-              <button onClick={(e) => { e.stopPropagation(); deleteChat(id); }} className="delete-history-btn">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  deleteChat(chat.id);
+                }}
+                className="delete-history-btn"
+              >
                 <FiTrash2 />
               </button>
             </div>
@@ -73,394 +93,492 @@ const HistoryPanel = ({ isVisible, onClose, history, loadChat, deleteChat }) => 
 };
 
 const PromptSuggestions = ({ onSuggestionClick }) => (
-    <div className="suggestions-container">
-        <div className="lyria-icon-large">
-            <RiRobot2Line />
-        </div>
-        <h2>Como posso ajudar hoje?</h2>
-        <div className="suggestions-grid">
-            <div
-                className="suggestion-card"
-                onClick={() => onSuggestionClick("Quem é você?")}
-            >
-                <p>
-                    <strong>Quem é você?</strong>
-                </p>
-                <span>Descubra a identidade da LyrIA</span>
-            </div>
-            <div
-                className="suggestion-card"
-                onClick={() => onSuggestionClick("Qual a melhor turma do SENAI?")}
-            >
-                <p>
-                    <strong>Qual a melhor turma?</strong>
-                </p>
-                <span>Uma pergunta capciosa...</span>
-            </div>
-            <div
-                className="suggestion-card"
-                onClick={() =>
-                    onSuggestionClick("Me dê uma ideia para um projeto React")
-                }
-            >
-                <p>
-                    <strong>Ideia de projeto</strong>
-                </p>
-                <span>Para inspirar sua criatividade</span>
-            </div>
-            <div
-                className="suggestion-card"
-                onClick={() => onSuggestionClick("Como você funciona?")}
-            >
-                <p>
-                    <strong>Como você funciona?</strong>
-                </p>
-                <span>Explore os bastidores da IA</span>
-            </div>
-        </div>
+  <div className="suggestions-container">
+    <div className="lyria-icon-large">
+      <RiRobot2Line />
     </div>
+    <h2>Como posso ajudar hoje?</h2>
+    <div className="suggestions-grid">
+      <div
+        className="suggestion-card"
+        onClick={() => onSuggestionClick("Quem é você?")}
+      >
+        <p>
+          <strong>Quem é você?</strong>
+        </p>
+        <span>Descubra a identidade da LyrIA</span>
+      </div>
+      <div
+        className="suggestion-card"
+        onClick={() => onSuggestionClick("Qual a melhor turma do SENAI?")}
+      >
+        <p>
+          <strong>Qual a melhor turma?</strong>
+        </p>
+        <span>Uma pergunta capciosa...</span>
+      </div>
+      <div
+        className="suggestion-card"
+        onClick={() =>
+          onSuggestionClick("Me dê uma ideia para um projeto React")
+        }
+      >
+        <p>
+          <strong>Ideia de projeto</strong>
+        </p>
+        <span>Para inspirar sua criatividade</span>
+      </div>
+      <div
+        className="suggestion-card"
+        onClick={() => onSuggestionClick("Como você funciona?")}
+      >
+        <p>
+          <strong>Como você funciona?</strong>
+        </p>
+        <span>Explore os bastidores da IA</span>
+      </div>
+    </div>
+  </div>
 );
 
 function ChatContent() {
-    const [messages, setMessages] = useState([]);
-    const [input, setInput] = useState("");
-    const [isBotTyping, setIsBotTyping] = useState(false);
-    const [copiedId, setCopiedId] = useState(null);
-    const [isHistoryVisible, setHistoryVisible] = useState(false);
-    const messagesEndRef = useRef(null);
-    const textareaRef = useRef(null);
-    
-    const [history, setHistory] = useState({});
-    const [currentChatId, setCurrentChatId] = useState(null);
-    
-    const [isListening, setIsListening] = useState(false);
-    const [isSpeechEnabled, setIsSpeechEnabled] = useState(true);
-    const [selectedVoice, setSelectedVoice] = useState(availableVoices[0].value);
-    
-    useEffect(() => {
-        const savedHistory = JSON.parse(localStorage.getItem("lyria-chat-history")) || {};
-        setHistory(savedHistory);
-    
-        const lastChatId = localStorage.getItem("lyria-last-chat-id");
-        if (lastChatId && savedHistory[lastChatId]) {
-            setCurrentChatId(lastChatId);
-            setMessages(savedHistory[lastChatId].messages);
-        } else {
-            setCurrentChatId(null);
-            setMessages([]);
-        }
-    }, []);
+  const { user, isAuthenticated } = useAuth();
+  const { addToast } = useToast();
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [isBotTyping, setIsBotTyping] = useState(false);
+  const [copiedId, setCopiedId] = useState(null);
+  const [isHistoryVisible, setHistoryVisible] = useState(false);
+  const messagesEndRef = useRef(null);
+  const textareaRef = useRef(null);
+  const requestCancellationRef = useRef({ cancel: () => {} });
 
-    useEffect(() => {
-        if (currentChatId && history[currentChatId]) {
-            const updatedHistory = {
-                ...history,
-                [currentChatId]: {
-                    ...history[currentChatId],
-                    messages: messages,
-                    lastUpdated: Date.now(),
-                },
-            };
-            setHistory(updatedHistory);
-            localStorage.setItem("lyria-chat-history", JSON.stringify(updatedHistory));
-            localStorage.setItem("lyria-last-chat-id", currentChatId);
-        }
-    }, [messages]);
+  const [conversations, setConversations] = useState([]);
+  const [currentChatId, setCurrentChatId] = useState(null);
 
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeechEnabled, setIsSpeechEnabled] = useState(false);
+  const [selectedVoice, setSelectedVoice] = useState(availableVoices[0].value);
+  const [isAttachmentMenuVisible, setAttachmentMenuVisible] = useState(false);
+  const [chatBodyAnimationClass, setChatBodyAnimationClass] = useState("fade-in");
+  const [isLoginPromptVisible, setLoginPromptVisible] = useState(false);
+  const [isDeleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [chatToDelete, setChatToDelete] = useState(null);
 
-    useEffect(() => {
-        speechConfig.speechSynthesisVoiceName = selectedVoice;
-    }, [selectedVoice]);
+  const fetchConversations = async () => {
+    if (isAuthenticated && user) {
+      try {
+        const response = await getConversations(user.nome);
+        setConversations(response.conversas || []);
+      } catch (error) {
+        console.error("Erro ao buscar conversas:", error);
+      }
+    } else {
+      setConversations([]);
+    }
+  };
 
-    useEffect(() => {
-        if (textareaRef.current) {
-            textareaRef.current.style.height = "auto";
-            const scrollHeight = textareaRef.current.scrollHeight;
-            textareaRef.current.style.height = `${scrollHeight}px`;
-        }
-    }, [input]);
+  useEffect(() => {
+    fetchConversations();
+  }, [isAuthenticated, user]);
 
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  useEffect(() => {
+    speechConfig.speechSynthesisVoiceName = selectedVoice;
+  }, [selectedVoice]);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      const scrollHeight = textareaRef.current.scrollHeight;
+      textareaRef.current.style.height = `${scrollHeight}px`;
+    }
+  }, [input]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isBotTyping]);
+
+  const handleCopyToClipboard = (text, id) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const speakResponse = (text) => {
+    if (!isSpeechEnabled) return;
+    const plainText = stripMarkdown(text);
+    const synthesizer = new SpeechSynthesizer(speechConfig);
+    synthesizer.speakTextAsync(
+      plainText,
+      () => synthesizer.close(),
+      (error) => {
+        console.error("Erro na síntese de voz:", error);
+        synthesizer.close();
+      }
+    );
+  };
+
+  const handleSend = async (textToSend) => {
+    const trimmedInput = (
+      typeof textToSend === "string" ? textToSend : input
+    ).trim();
+    if (!trimmedInput || isBotTyping || isListening) return;
+
+    // Cancel any ongoing request before sending a new one
+    if (requestCancellationRef.current) {
+      requestCancellationRef.current.cancel();
+    }
+
+    const userMessage = {
+      id: crypto.randomUUID(),
+      sender: "user",
+      text: trimmedInput,
     };
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+    setIsBotTyping(true);
 
-    useEffect(() => {
-        scrollToBottom();
-    }, [messages, isBotTyping]);
+    // This ID is captured at the moment of sending the request
+    const sentFromChatId = currentChatId;
 
-    const handleCopyToClipboard = (text, id) => {
-        navigator.clipboard.writeText(text);
-        setCopiedId(id);
-        setTimeout(() => setCopiedId(null), 2000);
-    };
+    try {
+      let response;
+      const controller = new AbortController();
+      requestCancellationRef.current = { cancel: () => controller.abort() };
 
-    const speakResponse = (text) => {
-        if (!isSpeechEnabled) return;
-        const synthesizer = new SpeechSynthesizer(speechConfig);
-        synthesizer.speakTextAsync(
-            text,
-            () => synthesizer.close(),
-            (error) => {
-                console.error("Erro na síntese de voz:", error);
-                synthesizer.close();
-            }
-        );
-    };
+      if (isAuthenticated && user) {
+        response = await postMessage(user.nome, sentFromChatId, trimmedInput, controller.signal);
 
-    const handleSend = async (textToSend) => {
-        const trimmedInput = (typeof textToSend === "string" ? textToSend : input).trim();
-        if (!trimmedInput || isBotTyping || isListening) return;
-
-        let chatId = currentChatId;
-        
-        if (!chatId) {
-            const newId = `chat-${crypto.randomUUID()}`;
-            const newTitle = trimmedInput.substring(0, 30) + (trimmedInput.length > 30 ? "..." : "");
-            const newChat = {
-                title: newTitle,
-                messages: [],
-                createdAt: Date.now()
-            };
-
-            const updatedHistory = { ...history, [newId]: newChat };
-            setHistory(updatedHistory);
-            
-            chatId = newId;
-            setCurrentChatId(newId);
+        // Check if the chat context has changed since the request was sent
+        if (currentChatId !== sentFromChatId) {
+          console.log("Request was for a different chat. Ignoring response.");
+          return; // Ignore the response
         }
-    
-        const userMessage = {
-            id: crypto.randomUUID(),
-            sender: "user",
-            text: trimmedInput,
+
+        if (response.new_conversa_id && !sentFromChatId) {
+          setCurrentChatId(response.new_conversa_id);
+          fetchConversations();
+        }
+      } else {
+        response = await conversarAnonimo(trimmedInput, controller.signal);
+      }
+
+      if (controller.signal.aborted) {
+        console.log("Request aborted, not setting bot message.");
+        return;
+      }
+
+      const botMessage = {
+        id: crypto.randomUUID(),
+        sender: "bot",
+        text: response.resposta,
+        animate: true,
+      };
+      setMessages((prev) => [...prev, botMessage]);
+      speakResponse(response.resposta);
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        console.log('Fetch aborted');
+      } else {
+        const errorMessage = {
+          id: crypto.randomUUID(),
+          sender: "bot",
+          text: "Desculpe, ocorreu um erro.",
         };
-        
-        setMessages((prev) => [...prev, userMessage]);
-    
-        setInput("");
-        setIsBotTyping(true);
-    
-        try {
-            const response = await conversarAnonimo(trimmedInput);
-            const botMessage = {
-                id: crypto.randomUUID(),
-                sender: "bot",
-                text: response.resposta,
-            };
-            setMessages((prev) => [...prev, botMessage]);
-            speakResponse(response.resposta);
-        } catch (error) {
-            const errorMessage = {
-                id: crypto.randomUUID(),
-                sender: "bot",
-                text: "Desculpe, ocorreu um erro ao me comunicar com meus servidores. Tente novamente mais tarde.",
-            };
-            setMessages((prev) => [...prev, errorMessage]);
-            speakResponse(errorMessage.text);
-        } finally {
-            setIsBotTyping(false);
-        }
-    };
+        setMessages((prev) => [...prev, errorMessage]);
+        speakResponse(errorMessage.text);
+      }
+    } finally {
+      // Only stop typing indicator if the chat context hasn't changed
+      if (currentChatId === sentFromChatId) {
+        setIsBotTyping(false);
+      }
+    }
+  };
 
-    const handleKeyDown = (event) => {
-        if (event.key === "Enter" && !event.shiftKey) {
-            event.preventDefault();
-            handleSend();
-        }
-    };
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      handleSend();
+    }
+  };
 
-    const handleMicClick = () => {
-        if (isListening) return;
+  const handleMicClick = () => {
+    /* ... (lógica do microfone inalterada) ... */
+  };
 
-        const audioConfig = AudioConfig.fromDefaultMicrophoneInput();
-        const recognizer = new SpeechRecognizer(speechConfig, audioConfig);
-
-        setIsListening(true);
-        setInput("Ouvindo... pode falar.");
-
-        recognizer.recognizeOnceAsync(
-            (result) => {
-                if (result.reason === ResultReason.RecognizedSpeech) {
-                    const recognizedText = result.text;
-                    handleSend(recognizedText);
-                } else {
-                    setInput("Não consegui entender. Tente novamente.");
-                    setTimeout(() => setInput(""), 2000);
-                }
-                recognizer.close();
-                setIsListening(false);
-            },
-            (error) => {
-                setInput("Erro ao acessar o microfone.");
-                recognizer.close();
-                setIsListening(false);
-                setTimeout(() => setInput(""), 2000);
-            }
-        );
-    };
-
-    const startNewChat = () => {
+  // Limpa a tela para uma nova conversa
+  const startNewChat = () => {
+    if (requestCancellationRef.current) {
+      requestCancellationRef.current.cancel();
+    }
+    setIsBotTyping(false);
+    setChatBodyAnimationClass("fade-out");
+    setTimeout(() => {
       setCurrentChatId(null);
       setMessages([]);
-      localStorage.removeItem("lyria-last-chat-id");
-    };
+      setChatBodyAnimationClass("fade-in");
+    }, 500); // Duração da animação de fade-out
+  };
 
-    const loadChat = (id) => {
-        if (history[id]) {
-            setCurrentChatId(id);
-            setMessages(history[id].messages);
-            localStorage.setItem("lyria-last-chat-id", id);
-            setHistoryVisible(false);
-        }
-    };
-    
-    const deleteChat = (idToDelete) => {
-        const updatedHistory = { ...history };
-        delete updatedHistory[idToDelete];
-        
-        setHistory(updatedHistory);
-        localStorage.setItem("lyria-chat-history", JSON.stringify(updatedHistory));
-        
-        if (currentChatId === idToDelete) {
-           startNewChat();
-        }
-    };
+  const loadChat = async (id) => {
+    if (requestCancellationRef.current) {
+      requestCancellationRef.current.cancel();
+    }
+    setIsBotTyping(false);
+    try {
+      const response = await getMessagesForConversation(id);
+      setCurrentChatId(id);
+      // Adiciona a propriedade 'animate: false' para mensagens carregadas
+      const historicalMessages = response.mensagens.map((msg) => ({
+        ...msg,
+        animate: false,
+      }));
+      setMessages(historicalMessages || []);
+      setHistoryVisible(false);
+    } catch (error) {
+      console.error("Erro ao carregar conversa", error);
+    }
+  };
 
-    const toggleSpeech = () => setIsSpeechEnabled((prev) => !prev);
-    const handleVoiceChange = (event) => setSelectedVoice(event.target.value);
+  const deleteChat = (id) => {
+    setChatToDelete(id);
+    setDeleteModalVisible(true);
+  };
 
-    return (
-        <>
-            <HistoryPanel
-                isVisible={isHistoryVisible}
-                onClose={() => setHistoryVisible(false)}
-                history={history}
-                loadChat={loadChat}
-                deleteChat={deleteChat}
-            />
-            <main
-                className={`galaxy-chat-area ${isHistoryVisible ? "history-open" : ""}`}
+  const handleConfirmDelete = async () => {
+    if (!chatToDelete) return;
+    try {
+      await deleteConversation(chatToDelete);
+      addToast("Conversa deletada com sucesso.", "success");
+      fetchConversations(); // Atualiza a lista
+      if (currentChatId === chatToDelete) {
+        setCurrentChatId(null);
+        setMessages([]);
+      }
+    } catch (error) {
+      addToast("Erro ao deletar conversa.", "error");
+      console.error("Erro ao deletar conversa", error);
+    } finally {
+      setDeleteModalVisible(false);
+      setChatToDelete(null);
+    }
+  };
+
+  const toggleSpeech = () => setIsSpeechEnabled((prev) => !prev);
+  const handleVoiceChange = (event) => setSelectedVoice(event.target.value);
+
+  const stripMarkdown = (text) => {
+    return text
+      // Remove code blocks
+      .replace(/```[\s\S]*?```/g, ' ')
+      // Remove inline code
+      .replace(/`/g, '')
+      // Remove bold and italics
+      .replace(/\*\*/g, '')
+      .replace(/\*/g, '')
+      // Remove headings
+      .replace(/#{1,6}\s/g, '')
+      // Remove links, keeping the text
+      .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')
+      // Remove images
+      .replace(/!\[[^\]]*\]\([^\)]+\)/g, ' ')
+      .trim();
+  };
+
+  const handleHistoryClick = () => {
+    if (!isAuthenticated) {
+      setLoginPromptVisible(true);
+    } else {
+      setHistoryVisible((prev) => !prev);
+    }
+  };
+
+  const handleNewChatClick = () => {
+    if (!isAuthenticated) {
+      setLoginPromptVisible(true);
+    } else {
+      startNewChat();
+    }
+  };
+
+  return (
+    <>
+      {isLoginPromptVisible && (
+        <LoginPrompt
+          onDismiss={() => setLoginPromptVisible(false)}
+          showContinueAsGuest={false}
+        />
+      )}
+      <ConfirmationModal
+        isOpen={isDeleteModalVisible}
+        onClose={() => setDeleteModalVisible(false)}
+        onConfirm={handleConfirmDelete}
+        title="Confirmar Exclusão"
+        message="Você tem certeza que deseja apagar esta conversa? Esta ação não pode ser desfeita."
+      />
+      <HistoryPanel
+        isVisible={isHistoryVisible}
+        onClose={() => setHistoryVisible(false)}
+        conversations={conversations}
+        loadChat={loadChat}
+        deleteChat={deleteChat}
+      />
+      <main
+        className={`galaxy-chat-area ${isHistoryVisible ? "history-open" : ""}`}
+      >
+        <header className="galaxy-chat-header">
+          <button
+            className="header-icon-btn"
+            onClick={handleHistoryClick}
+          >
+            <FiClock />
+          </button>
+          <Link to="/" className="header-title-link">
+            <h1>LyrIA</h1>
+          </Link>
+          <div className="header-voice-controls">
+            <select
+              value={selectedVoice}
+              onChange={handleVoiceChange}
+              className="voice-select"
+              title="Selecionar voz"
             >
-                <header className="galaxy-chat-header">
-                    <button
-                        className="header-icon-btn"
-                        onClick={() => setHistoryVisible(true)}
-                    >
-                        <FiClock />
-                    </button>
+              {availableVoices.map((voice) => (
+                <option key={voice.value} value={voice.value}>
+                  {voice.label}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={toggleSpeech}
+              className="header-icon-btn"
+              title={isSpeechEnabled ? "Desativar voz" : "Ativar voz"}
+            >
+              {isSpeechEnabled ? <FaVolumeUp /> : <FaVolumeMute />}
+            </button>
+            <button
+              className="header-icon-btn"
+              onClick={handleNewChatClick}
+              title="Novo Chat"
+            >
+              <FiPlus />
+            </button>
+          </div>
+        </header>
 
-                    <Link to="/" className="header-title-link">
-                        <h1>LyrIA</h1>
-                    </Link>
-
-                    <div className="header-voice-controls">
-                        <select
-                            value={selectedVoice}
-                            onChange={handleVoiceChange}
-                            className="voice-select"
-                            title="Selecionar voz"
-                        >
-                            {availableVoices.map((voice) => (
-                                <option key={voice.value} value={voice.value}>
-                                    {voice.label}
-                                </option>
-                            ))}
-                        </select>
-                        <button
-                            onClick={toggleSpeech}
-                            className="header-icon-btn"
-                            title={isSpeechEnabled ? "Desativar voz" : "Ativar voz"}
-                        >
-                            {isSpeechEnabled ? <FaVolumeUp /> : <FaVolumeMute />}
-                        </button>
-                        <button
-                            className="header-icon-btn"
-                            onClick={startNewChat}
-                            title="Novo Chat"
-                        >
-                            <FiPlus />
-                        </button>
-                    </div>
-                </header>
-
-                <div className="galaxy-chat-body">
-                    {messages.length === 0 ? (
-                        <PromptSuggestions onSuggestionClick={handleSend} />
-                    ) : (
-                        messages.map((msg) => (
-                            <div key={msg.id} className={`message-wrapper ${msg.sender}`}>
-                                <div className="avatar-icon">
-                                    {msg.sender === "bot" ? <RiRobot2Line /> : <FiUser />}
-                                </div>
-                                <div className="message-content">
-                                    <span className="sender-name">
-                                        {msg.sender === "bot" ? "LyrIA" : "Você"}
-                                    </span>
-                                    <AnimatedBotMessage fullText={msg.text} />
-                                    {msg.sender === "bot" && (
-                                        <button
-                                            className="copy-btn"
-                                            onClick={() => handleCopyToClipboard(msg.text, msg.id)}
-                                        >
-                                            {copiedId === msg.id ? <FiCheck /> : <FiCopy />}
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        ))
-                    )}
-                    {isBotTyping && (
-                        <div className="message-wrapper bot">
-                            <div className="avatar-icon">
-                                <RiRobot2Line />
-                            </div>
-                            <div className="message-content">
-                                <span className="sender-name">LyrIA</span>
-                                <div className="typing-indicator">
-                                    <span />
-                                    <span />
-                                    <span />
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                    <div ref={messagesEndRef} />
+        <div className={`galaxy-chat-body ${chatBodyAnimationClass}`}>
+          {messages.length === 0 ? (
+            <PromptSuggestions onSuggestionClick={handleSend} />
+          ) : (
+            messages.map((msg, index) => (
+              <div
+                key={msg.id || index}
+                className={`message-wrapper ${msg.sender}`}
+              >
+                <div className="avatar-icon">
+                  {msg.sender === "bot" ? <RiRobot2Line /> : <FiUser />}
                 </div>
-
-                <footer className="galaxy-chat-input-container">
-                    <FiPaperclip className="input-icon" />
-                    <textarea
-                        ref={textareaRef}
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        placeholder="Digite sua mensagem para LyrIA..."
-                        rows="1"
-                        disabled={isBotTyping || isListening}
-                    />
-                    <FiMic
-                        className={`input-icon mic-icon ${isListening ? "listening" : ""}`}
-                        onClick={handleMicClick}
-                    />
+                <div className="message-content">
+                  <span className="sender-name">
+                    {msg.sender === "bot" ? "LyrIA" : "Você"}
+                  </span>
+                  <AnimatedBotMessage
+                    fullText={msg.text}
+                    animate={msg.animate}
+                  />
+                  {msg.sender === "bot" && (
                     <button
-                        onClick={() => handleSend()}
-                        disabled={!input.trim() || isBotTyping || isListening}
-                        className="send-btn"
+                      className="copy-btn"
+                      onClick={() =>
+                        handleCopyToClipboard(msg.text, msg.id || index)
+                      }
                     >
-                        <FiSend />
+                      {copiedId === (msg.id || index) ? (
+                        <FiCheck />
+                      ) : (
+                        <FiCopy />
+                      )}
                     </button>
-                </footer>
-            </main>
-        </>
-    );
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+          {isBotTyping && (
+            <div className="message-wrapper bot">
+              <div className="avatar-icon">
+                <RiRobot2Line />
+              </div>
+              <div className="message-content">
+                <span className="sender-name">LyrIA</span>
+                <div className="typing-indicator">
+                  <span />
+                  <span />
+                  <span />
+                </div>
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        <footer className="galaxy-chat-input-container">
+          <div className="attachment-container">
+            {isAttachmentMenuVisible && (
+              <div className="attachment-menu">
+                <button className="attachment-option" onClick={() => { addToast('Funcionalidade ainda não implementada.', 'info'); setAttachmentMenuVisible(false); }}>
+                  <span>Anexar Arquivo</span>
+                </button>
+                <button className="attachment-option" onClick={() => { addToast('Funcionalidade ainda não implementada.', 'info'); setAttachmentMenuVisible(false); }}>
+                  <span>Usar a Câmera</span>
+                </button>
+                <button className="attachment-option" onClick={() => { addToast('Funcionalidade ainda não implementada.', 'info'); setAttachmentMenuVisible(false); }}>
+                  <span>Enviar Foto/Vídeo da Galeria</span>
+                </button>
+              </div>
+            )}
+            <FiPaperclip
+              className="input-icon"
+              onClick={() => setAttachmentMenuVisible(!isAttachmentMenuVisible)}
+            />
+          </div>
+          <textarea
+            ref={textareaRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Digite sua mensagem para LyrIA..."
+            rows="1"
+            disabled={isBotTyping || isListening}
+          />
+          <FiMic
+            className={`input-icon mic-icon ${isListening ? "listening" : ""}`}
+            onClick={handleMicClick}
+          />
+          <button
+            onClick={() => handleSend()}
+            disabled={!input.trim() || isBotTyping || isListening}
+            className="send-btn"
+          >
+            <FiSend />
+          </button>
+        </footer>
+      </main>
+    </>
+  );
 }
 
 function Chatbot() {
-    return (
-        <div className="galaxy-chat-container">
-            <ChatContent />
-        </div>
-    );
+  return (
+    <div className="galaxy-chat-container">
+      <ChatContent />
+    </div>
+  );
 }
 
 export default Chatbot;

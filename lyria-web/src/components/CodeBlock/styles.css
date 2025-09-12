@@ -1,0 +1,49 @@
+.code-block-container {
+  background-color: var(--color-dark-purple-v2);
+  border-radius: 8px;
+  margin: 1rem 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.code-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background-color: rgba(0, 0, 0, 0.2);
+  font-size: 0.85rem;
+  color: var(--color-light-purple);
+}
+
+.copy-code-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: 1px solid var(--color-purple-v2);
+  color: var(--color-light-purple);
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.copy-code-btn:hover {
+  background-color: var(--color-purple-v2);
+  color: white;
+}
+
+.code-block-pre {
+  padding: 1rem;
+  overflow-x: auto;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  background-color: transparent;
+  color: var(--color-off-white);
+  white-space: pre-wrap;
+}
+
+.code-block-pre code {
+  font-family: 'Courier New', Courier, monospace;
+}

@@ -35,7 +35,20 @@
 }
 
 .galaxy-chat-area.history-open {
-  transform: translateX(150px);
+  /* This transform was pushing the content. It's removed. */
+}
+
+/* Adiciona um overlay escuro quando o histórico está aberto, agora para todas as telas */
+.galaxy-chat-area.history-open::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 99;
+  transition: background-color 0.4s ease-in-out;
 }
 
 .galaxy-chat-header {
@@ -492,6 +505,65 @@
   margin-top: 1rem;
 }
 
+.attachment-container {
+  position: relative;
+}
+
+.attachment-menu {
+  position: absolute;
+  bottom: 150%; /* Position it above the input area */
+  left: 0;
+  background: #1e1a3d;
+  border-radius: 12px;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  z-index: 101;
+  width: 250px;
+}
+
+.attachment-option {
+  background: transparent;
+  border: none;
+  color: #f0f0f0;
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 0.95rem;
+  transition: background 0.2s ease-in-out;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.attachment-option:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Animações para o corpo do chat (Novo Chat) */
+@keyframes chat-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes chat-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.galaxy-chat-body.fade-in {
+  animation: chat-fade-in 0.5s ease-in forwards;
+}
+
+.galaxy-chat-body.fade-out {
+  animation: chat-fade-out 0.5s ease-out forwards;
+}
+
+
 @keyframes pulse-mic {
   0% {
     transform: scale(1);
@@ -504,5 +576,69 @@
   100% {
     transform: scale(1);
     opacity: 1;
+  }
+}
+
+/* --- Media Queries for Responsiveness --- */
+@media (max-width: 768px) {
+  .galaxy-chat-area {
+    height: 100dvh; /* Usa a altura dinâmica da viewport para se ajustar ao teclado móvel */
+    max-height: none;
+    border-radius: 0;
+    /* The transform is no longer needed here */
+  }
+
+  .history-panel {
+    width: 85%; /* Ocupa mais espaço na tela */
+    max-width: 320px;
+  }
+
+  /* The overlay is now handled globally */
+
+  .galaxy-chat-header {
+    padding: 0.8rem 1rem;
+  }
+  .galaxy-chat-header h1 {
+    font-size: 1.2rem;
+  }
+  .header-icon-btn {
+    font-size: 1.3rem;
+  }
+  .voice-select {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.6rem;
+    padding-right: 1.8em;
+  }
+
+  .galaxy-chat-body {
+    padding: 1rem;
+    gap: 1.2rem;
+  }
+  .message-wrapper {
+    max-width: 90%;
+  }
+
+  .galaxy-chat-input-container {
+    margin: 1rem;
+    gap: 0.5rem;
+    padding: 0.4rem 0.5rem 0.4rem 1rem;
+  }
+  .send-btn {
+    width: 44px;
+    height: 44px;
+  }
+
+  .suggestions-grid {
+    grid-template-columns: 1fr; /* Coluna única em telas menores */
+  }
+
+  .copy-btn {
+    position: static; /* Evita sobreposição em telas pequenas */
+    align-self: flex-end;
+    margin-top: 0.5rem;
+    margin-right: 0.5rem;
+    opacity: 0.7;
+    right: auto;
+    bottom: auto;
   }
 }
