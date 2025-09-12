@@ -54,18 +54,6 @@ def criar_banco():
     );    
     """)
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS mensagens (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        conversa_id INTEGER NOT NULL,
-        request_id INTEGER NOT NULL,
-        response_id INTEGER NOT NULL,
-        criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY(conversa_id) REFERENCES conversas(id),
-        FOREIGN KEY(request_id) REFERENCES user_requests(id),
-        FOREIGN KEY(response_id) REFERENCES ai_responses(id)
-    );
-    """)
-    cursor.execute("""
     CREATE TABLE IF NOT EXISTS memorias (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         usuario_id INTEGER NOT NULL,
@@ -103,14 +91,13 @@ def carregar_memorias(usuario, limite=20):
     cursor.execute("""
         SELECT ur.conteudo AS usuario_disse,
                ar.conteudo AS ia_respondeu,
-               m.criado_em AS quando
-        FROM mensagens m
-        JOIN user_requests ur ON m.request_id = ur.id
-        JOIN ai_responses ar ON m.response_id = ar.id
-        JOIN conversas c ON m.conversa_id = c.id
+               ur.criado_em AS quando
+        FROM user_requests ur
+        JOIN ai_responses ar ON ur.id = ar.request_id
+        JOIN conversas c ON ur.conversa_id = c.id
         JOIN usuarios u ON c.usuario_id = u.id
         WHERE u.nome = ?
-        ORDER BY m.criado_em DESC
+        ORDER BY ur.criado_em DESC
         LIMIT ?
     """, (usuario, limite))
     results = cursor.fetchall()
@@ -211,14 +198,13 @@ def pegarHistorico(usuario, limite=3):
     cursor.execute("""
         SELECT ur.conteudo AS pergunta,
                ar.conteudo AS resposta,
-               m.criado_em AS timestamp
-        FROM mensagens m
-        JOIN user_requests ur ON m.request_id = ur.id
-        JOIN ai_responses ar ON m.response_id = ar.id
-        JOIN conversas c ON m.conversa_id = c.id
+               ur.criado_em AS timestamp
+        FROM user_requests ur
+        JOIN ai_responses ar ON ur.id = ar.request_id
+        JOIN conversas c ON ur.conversa_id = c.id
         JOIN usuarios u ON c.usuario_id = u.id
         WHERE u.nome = ?
-        ORDER BY m.criado_em DESC
+        ORDER BY ur.criado_em DESC
         LIMIT ?
     """, (usuario, limite))
     results = cursor.fetchall()
@@ -231,13 +217,12 @@ def carregar_conversas(usuario, limite=12):
     cursor = conn.cursor()
     cursor.execute("""
         SELECT ur.conteudo AS pergunta, ar.conteudo AS resposta
-        FROM mensagens m
-        JOIN user_requests ur ON m.request_id = ur.id
-        JOIN ai_responses ar ON m.response_id = ar.id
-        JOIN conversas c ON m.conversa_id = c.id
+        FROM user_requests ur
+        JOIN ai_responses ar ON ur.id = ar.request_id
+        JOIN conversas c ON ur.conversa_id = c.id
         JOIN usuarios u ON c.usuario_id = u.id
         WHERE u.nome = ?
-        ORDER BY m.criado_em ASC
+        ORDER BY ur.criado_em ASC
         LIMIT ?
     """, (usuario, limite))
     results = cursor.fetchall()
@@ -270,11 +255,6 @@ def salvarMensagem(usuario, conversa_id, pergunta, resposta, modelo_usado=None, 
             (request_id, resposta, modelo_usado, tokens)
         )
         response_id = cursor.lastrowid
-
-        cursor.execute(
-            "INSERT INTO mensagens (conversa_id, request_id, response_id) VALUES (?, ?, ?)",
-            (conversa_id, request_id, response_id)
-        )
 
         # Etapa 3: Inserir nas memórias usando o usuario_id já obtido
         cursor.execute(
@@ -329,12 +309,11 @@ def carregar_mensagens_da_conversa(conversa_id):
         SELECT
             ur.conteudo as pergunta,
             ar.conteudo as resposta,
-            m.criado_em as timestamp
-        FROM mensagens m
-        JOIN user_requests ur ON m.request_id = ur.id
-        JOIN ai_responses ar ON m.response_id = ar.id
-        WHERE m.conversa_id = ?
-        ORDER BY m.criado_em ASC
+            ur.criado_em as timestamp
+        FROM user_requests ur
+        JOIN ai_responses ar ON ur.id = ar.request_id
+        WHERE ur.conversa_id = ?
+        ORDER BY ur.criado_em ASC
     """, (conversa_id,))
     results = cursor.fetchall()
     conn.close()
@@ -349,7 +328,6 @@ def deletar_conversa(conversa_id):
     conn = sqlite3.connect(DB_NOME, timeout=10, check_same_thread=False)
     cursor = conn.cursor()
     # Deletar em cascata não é padrão no sqlite, então deletamos de cada tabela
-    cursor.execute("DELETE FROM mensagens WHERE conversa_id = ?", (conversa_id,))
     cursor.execute("DELETE FROM user_requests WHERE conversa_id = ?", (conversa_id,))
     # Ai_responses são deletadas em cascata a partir de user_requests se o foreign key for configurado para isso
     # mas vamos garantir.

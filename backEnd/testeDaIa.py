@@ -24,10 +24,14 @@ def carregar_memorias(usuario):
 def perguntar_ollama(pergunta, conversas, memorias, persona, contexto_web=None): 
     LIMITE_HISTORICO_REDUZIDO = 6
     
-    prompt_parts = [persona]
+    prompt_parts = []
+
+    # Adiciona a persona apenas se for o início da conversa
+    if not conversas:
+        prompt_parts.append(persona)
     
     if conversas:
-        prompt_parts.append("Histórico recente:")
+        prompt_parts.append("Histórico da Conversa Atual:")
         for msg in conversas[-LIMITE_HISTORICO_REDUZIDO:]:
             prompt_parts.append(f"Usuário: {msg['pergunta']}")
             prompt_parts.append(f"Lyria: {msg['resposta']}")
