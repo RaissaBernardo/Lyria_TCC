@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import LoginPrompt from '../../components/LoginPrompt';
 import { baseURL } from '../../services/api';
 import { FaTimes } from "react-icons/fa";
-import { FiMail, FiGithub } from "react-icons/fi";
+import { FiMail, FiGithub, FiInstagram } from "react-icons/fi";
 import logoImage from '/img/LogoBranca.png';
 
 function InitialScreen() {
@@ -17,13 +17,25 @@ function InitialScreen() {
   const navigate = useNavigate();
   const [dropdownVisible, setDropdownVisible] = useState(false);
 
+  // Array links de contato
+  const contactLinks = [
+    { icon: <FiMail />, label: "Email", href: "mailto:contato@lyria.ai" },
+    { icon: <FiGithub />, label: "LyrIA-Project", href: "https://github.com/RaissaBernardo/Lyria", targetBlank: true },
+    { icon: <FiInstagram />, label: "@vii_amaro", href: "https://www.instagram.com/vii_amaro", targetBlank: true },
+    { icon: <FiInstagram />, label: "@rah_antonia", href: "https://www.instagram.com/rah_antonia", targetBlank: true },
+    { icon: <FiInstagram />, label: "@antonybriito", href: "https://www.instagram.com/antonybriito", targetBlank: true },
+    { icon: <FiInstagram />, label: "@jaogabxs", href: "https://www.instagram.com/jaogabxs", targetBlank: true },
+    { icon: <FiInstagram />, label: "@gabrielcardos095", href: "https://www.instagram.com/gabrielcardos095", targetBlank: true },
+    { icon: <FiInstagram />, label: "@juli_naners", href: "https://www.instagram.com/juli_naners", targetBlank: true },
+  ];
+
   const toggleInfoModal = () => {
     if (isInfoVisible) {
       setIsModalClosing(true);
       setTimeout(() => {
         setInfoVisible(false);
         setIsModalClosing(false);
-      }, 500); // Corresponde à duração da animação de saída
+      }, 500);
     } else {
       setInfoVisible(true);
     }
@@ -67,12 +79,14 @@ function InitialScreen() {
           showContinueAsGuest={true}
         />
       )}
+
       <header className="app-header">
         <Link to={'/'} className="logo-link">
           <div className="logo">
             <img src={logoImage} alt="Logo da LyrIA" className="logo-image" />
           </div>
         </Link>
+
         <nav>
           {isAuthenticated ? (
             <div className="user-profile-section">
@@ -90,6 +104,7 @@ function InitialScreen() {
                   user?.nome?.charAt(0).toUpperCase()
                 )}
               </div>
+
               {dropdownVisible && (
                 <div className="user-dropdown-initial">
                   <Link to="/profile" className="dropdown-link">Ver Perfil</Link>
@@ -100,31 +115,24 @@ function InitialScreen() {
           ) : (
             <Link to={'/RegistrationAndLogin'}>Entrar</Link>
           )}
+
           <button onClick={toggleContactModal} className="nav-button">Contato</button>
         </nav>
       </header>
 
       <div className="main-content">
-        <div id="frase_efeito">
-          <b>Conheça LyrIA</b>
-        </div>
+        <div id="frase_efeito"><b>Conheça LyrIA</b></div>
         <span id="espaço"></span>
         <div className="container_espaço">
-          <button id="comecar" onClick={handleStartClick}>
-            Começar
-          </button>
-          <button id="sobre" onClick={toggleInfoModal}>
-            Saiba Mais
-          </button>
+          <button id="comecar" onClick={handleStartClick}>Começar</button>
+          <button id="sobre" onClick={toggleInfoModal}>Saiba Mais</button>
         </div>
       </div>
 
       {isInfoVisible && (
         <div className={`info-modal-backdrop ${isModalClosing ? 'fade-out' : ''}`}>
           <div className={`info-modal-content ${isModalClosing ? 'slide-out' : ''}`}>
-            <button className="close-modal-btn" onClick={toggleInfoModal}>
-              <FaTimes />
-            </button>
+            <button className="close-modal-btn" onClick={toggleInfoModal}><FaTimes /></button>
             <h2>Sobre a LyrIA</h2>
             <p>
               LyrIA é uma assistente virtual de última geração, projetada para ser sua companheira em um universo de conhecimento e criatividade.
@@ -146,23 +154,23 @@ function InitialScreen() {
       {isContactModalVisible && (
         <div className={`info-modal-backdrop ${isModalClosing ? 'fade-out' : ''}`}>
           <div className={`info-modal-content ${isModalClosing ? 'slide-out' : ''}`}>
-            <button className="close-modal-btn" onClick={toggleContactModal}>
-              <FaTimes />
-            </button>
+            <button className="close-modal-btn" onClick={toggleContactModal}><FaTimes /></button>
             <h2>Contato</h2>
             <div className="contact-info">
-              <p>
-                Para dúvidas, sugestões ou suporte, entre em contato conosco através dos seguintes canais:
-              </p>
+              <p>Para dúvidas, sugestões ou suporte, entre em contato conosco através dos seguintes canais:</p>
               <div className="contact-links">
-                <a href="mailto:contato@lyria.ai" className="contact-link-item">
-                  <FiMail />
-                  <span>contato@lyria.ai</span>
-                </a>
-                <a href="https://github.com/LyrIA-Project" target="_blank" rel="noopener noreferrer" className="contact-link-item">
-                  <FiGithub />
-                  <span>LyrIA-Project</span>
-                </a>
+                {contactLinks.map((link, index) => (
+                  <a
+                    key={index}
+                    href={link.href}
+                    target={link.targetBlank ? "_blank" : "_self"}
+                    rel={link.targetBlank ? "noopener noreferrer" : ""}
+                    className="contact-link-item"
+                  >
+                    {link.icon}
+                    <span>{link.label}</span>
+                  </a>
+                ))}
               </div>
             </div>
           </div>
