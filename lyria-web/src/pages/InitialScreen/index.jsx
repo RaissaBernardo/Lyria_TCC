@@ -23,7 +23,7 @@ function InitialScreen() {
       setTimeout(() => {
         setInfoVisible(false);
         setIsModalClosing(false);
-      }, 500); // Corresponde à duração da animação de saída
+      }, 500);
     } else {
       setInfoVisible(true);
     }
@@ -73,7 +73,7 @@ function InitialScreen() {
             <img src={logoImage} alt="Logo da LyrIA" className="logo-image" />
           </div>
         </Link>
-        <nav>
+        <nav className="main-nav">
           {isAuthenticated ? (
             <div className="user-profile-section">
               <div
@@ -98,9 +98,11 @@ function InitialScreen() {
               )}
             </div>
           ) : (
-            <Link to={'/RegistrationAndLogin'}>Entrar</Link>
+            <div className="nav-actions">
+              <Link to={'/RegistrationAndLogin'} className="nav-button">Entrar</Link>
+              <button onClick={toggleContactModal} className="nav-button">Contato</button>
+            </div>
           )}
-          <button onClick={toggleContactModal} className="nav-button">Contato</button>
         </nav>
       </header>
 
@@ -109,7 +111,7 @@ function InitialScreen() {
           <b>Conheça LyrIA</b>
         </div>
         <span id="espaço"></span>
-        <div className="container_espaço">
+        <div className="botoes-container">
           <button id="comecar" onClick={handleStartClick}>
             Começar
           </button>
