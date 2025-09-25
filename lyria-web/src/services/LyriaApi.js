@@ -1,8 +1,8 @@
 import api from "./api";
 
-export const conversarAnonimo = async (pergunta, signal) => {
+export const conversarAnonimo = async (pergunta, persona, signal) => {
   try {
-    const response = await api.post("/Lyria/conversar", { pergunta }, { signal });
+    const response = await api.post("/Lyria/conversar", { pergunta, persona }, { signal });
     return response.data;
   } catch (error) {
     if (error.name !== 'AbortError') {
@@ -103,6 +103,16 @@ export const getPersona = async (usuario) => {
   }
 };
 
+export const getPersonas = async () => {
+  try {
+    const response = await api.get("/Lyria/personas");
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao buscar personas:", error);
+    throw error;
+  }
+};
+
 export const login = async (credentials) => {
   try {
     const response = await api.post("/Lyria/login", credentials);
@@ -115,7 +125,7 @@ export const login = async (credentials) => {
 
 export const register = async (userData) => {
   try {
-    const response = await api.post("/Lyria/register", userData);
+    const response = await api.post("/Lyria/usuarios", userData);
     return response.data;
   } catch (error) {
     console.error("Erro ao registrar usuário:", error);
