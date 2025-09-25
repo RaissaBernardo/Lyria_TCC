@@ -7,6 +7,7 @@ import { baseURL } from '../../services/api';
 import { FaTimes } from "react-icons/fa";
 import { FiMail, FiGithub } from "react-icons/fi";
 import logoImage from '/img/LogoBranca.png';
+import ShinyText from '../../components/ShinyText/ShinyText';
 
 function InitialScreen() {
   const [isInfoVisible, setInfoVisible] = useState(false);
@@ -108,12 +109,18 @@ function InitialScreen() {
 
       <div className="main-content">
         <div id="frase_efeito">
-          <b>Conheça LyrIA</b>
+       <h1 id='frase_efeito'>Conheça LyrIA</h1>
         </div>
         <span id="espaço"></span>
         <div className="botoes-container">
           <button id="comecar" onClick={handleStartClick}>
-            Começar
+  
+  <ShinyText 
+    text="Começar" 
+    disabled={false} 
+    speed={3} 
+    className='custom-class' 
+  />
           </button>
           <button id="sobre" onClick={toggleInfoModal}>
             Saiba Mais
