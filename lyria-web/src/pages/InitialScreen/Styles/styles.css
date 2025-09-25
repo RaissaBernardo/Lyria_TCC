@@ -27,7 +27,7 @@
   align-items: center;
   height: 65px;
   padding: 0 30px;
-  transition: all 0.3s ease; /* Adicionado para suavizar a transição */
+  transition: all 0.3s ease;
 }
 
 .logo-link {
@@ -46,13 +46,13 @@
 .logo-image {
   height: 60%;
   width: auto;
-  transition: height 0.3s ease; /* Adicionado para suavizar a transição */
+  transition: height 0.3s ease;
 }
 
 .app-header nav {
   display: flex;
   align-items: center;
-  gap: 30px;
+  gap: 15px;
 }
 
 .app-header nav a {
@@ -75,10 +75,20 @@
   cursor: pointer;
   transition: color 0.3s ease;
   font-family: var(--font-family-main);
+  padding: 8px 16px;
+  border-radius: 20px;
+  text-align: center;
+  display: inline-block;
 }
 
 .nav-button:hover {
   color: white;
+}
+
+.nav-actions {
+  display: flex;
+  gap: 15px;
+  align-items: center;
 }
 
 .team-list {
@@ -295,7 +305,6 @@
   }
 }
 
-/* Animações de saída */
 .info-modal-backdrop.fade-out {
   animation: fadeOutBackdrop 0.5s ease-out forwards;
 }
@@ -320,7 +329,6 @@
   }
 }
 
-/* Estilos para a seção do perfil do usuário na tela inicial */
 .user-profile-section {
   position: relative;
   display: flex;
@@ -350,12 +358,12 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 50%; /* Garante que a imagem também seja redonda */
+  border-radius: 50%;
 }
 
 .user-dropdown-initial {
   position: absolute;
-  top: 55px; /* Abaixo do indicador */
+  top: 55px;
   right: 0;
   background-color: var(--color-dark-purple-v2);
   border-radius: 8px;
@@ -401,13 +409,16 @@
   background-color: var(--color-purple-v1);
 }
 
-/* --- REGRAS DE RESPONSIVIDADE ADICIONADAS --- */
+.botoes-container {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
 
-/* Para tablets e telas menores */
 @media (max-width: 992px) {
   .app-header {
-    width: 90%; /* Ocupa mais espaço na largura */
-    top: 20px;   /* Sobe um pouco */
+    width: 90%;
+    top: 20px;
   }
 
   .main-content {
@@ -421,41 +432,64 @@
   }
 }
 
-/* Para celulares */
 @media (max-width: 768px) {
   .app-header {
-    height: 60px; /* Diminui a altura */
-    padding: 0 20px; /* Diminui o espaçamento interno */
+    height: 60px;
+    padding: 0 15px;
   }
 
   .logo-image {
-    height: 50%; /* Diminui o tamanho da logo */
+    height: 50%;
   }
 
   .app-header nav {
-    gap: 20px; /* Diminui o espaço entre os links de navegação */
+    flex: 1;
+    justify-content: flex-end;
+  }
+  
+  .nav-actions {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .nav-actions .nav-button {
+    font-size: 0.9rem;
+    padding: 8px 12px;
   }
 
   #frase_efeito {
     font-size: 28px;
   }
+  
+  .botoes-container {
+    flex-direction: column;
+    align-items: center;
+  }
 
   #comecar, #sobre {
-    font-size: 1rem; /* Diminui o tamanho da fonte nos botões */
-    padding: 18px 40px; /* Ajusta o padding dos botões */
+    font-size: 1rem;
+    padding: 18px 40px;
+    width: 100%;
+    max-width: 300px;
+    margin-left: 0;
   }
 }
 
-/* Para celulares bem pequenos */
 @media (max-width: 480px) {
   .app-header nav a {
-    font-size: 0.9rem; /* Diminui ainda mais a fonte da navegação */
+    font-size: 0.9rem;
   }
 
-  /* Esconde o texto da logo, deixando só a imagem se necessário,
-     ou apenas reduz mais o tamanho. Por enquanto, vamos só reduzir. */
   .logo-image {
     height: 45%;
+  }
+  
+  .nav-actions {
+    gap: 5px;
+  }
+  
+  .nav-actions .nav-button {
+    padding: 6px 10px;
   }
 }
 
