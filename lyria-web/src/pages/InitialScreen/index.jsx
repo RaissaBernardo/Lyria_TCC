@@ -19,7 +19,7 @@ function InitialScreen() {
 
   // Array links de contato
   const contactLinks = [
-    { icon: <FiMail />, label: "Email", href: "mailto:contato@lyria.ai" },
+   { icon: <FiMail />, label: "Email", href: "mailto:https://mail.google.com/mail/u/0/?view=cm&fs=1&to=lyriasenai@gmail.com&su=Contato%20LyrIA", targetBlank: true },
     { icon: <FiGithub />, label: "LyrIA-Project", href: "https://github.com/RaissaBernardo/Lyria", targetBlank: true },
     { icon: <FiInstagram />, label: "@vii_amaro", href: "https://www.instagram.com/vii_amaro", targetBlank: true },
     { icon: <FiInstagram />, label: "@rah_antonia", href: "https://www.instagram.com/rah_antonia", targetBlank: true },
@@ -87,7 +87,7 @@ function InitialScreen() {
           </div>
         </Link>
 
-        <nav>
+        <nav className="main-nav">
           {isAuthenticated ? (
             <div className="user-profile-section">
               <div
@@ -113,19 +113,24 @@ function InitialScreen() {
               )}
             </div>
           ) : (
-            <Link to={'/RegistrationAndLogin'}>Entrar</Link>
+            <div className="nav-actions">
+              <Link to={'/RegistrationAndLogin'} className="nav-button">Entrar</Link>
+              <button onClick={toggleContactModal} className="nav-button">Contato</button>
+            </div>
           )}
-
-          <button onClick={toggleContactModal} className="nav-button">Contato</button>
         </nav>
       </header>
 
       <div className="main-content">
         <div id="frase_efeito"><b>Conheça LyrIA</b></div>
         <span id="espaço"></span>
-        <div className="container_espaço">
-          <button id="comecar" onClick={handleStartClick}>Começar</button>
-          <button id="sobre" onClick={toggleInfoModal}>Saiba Mais</button>
+        <div className="botoes-container">
+          <button id="comecar" onClick={handleStartClick}>
+            Começar
+          </button>
+          <button id="sobre" onClick={toggleInfoModal}>
+            Saiba Mais
+          </button>
         </div>
       </div>
 
