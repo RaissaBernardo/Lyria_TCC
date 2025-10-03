@@ -25,8 +25,9 @@ import {
   getMessagesForConversation,
   postMessage,
   deleteConversation,
-  getPersonas, 
-  setPersona,
+  getPersonas,
+  putPersona,
+  getPersona,
 } from "../../services/LyriaApi";
 import { useToast } from "../../context/ToastContext";
 
@@ -159,7 +160,7 @@ function ChatContent() {
   const [currentChatId, setCurrentChatId] = useState(null);
 
   const [isListening, setIsListening] = useState(false);
-  const [isSpeechEnabled, setIsSpeechEnabled] = useState(false);
+  const [isSpeechEnabled, setIsSpeechEnabled] = useState(true);
   const [selectedVoice, setSelectedVoice] = useState(availableVoices[0].value);
   const [isAttachmentMenuVisible, setAttachmentMenuVisible] = useState(false);
   const [chatBodyAnimationClass, setChatBodyAnimationClass] = useState("fade-in");
@@ -180,6 +181,29 @@ function ChatContent() {
     };
     fetchPersonas();
   }, []);
+
+  // Efeito para carregar a persona e a voz do usuário ao entrar no chat
+  useEffect(() => {
+    const loadUserPreferences = async () => {
+      if (isAuthenticated && user) {
+        // Carregar persona do backend
+        try {
+          const personaResponse = await getPersona();
+          if (personaResponse && personaResponse.persona) {
+            setSelectedPersona(personaResponse.persona);
+          }
+        } catch (error) {
+          console.error("Erro ao buscar persona do usuário:", error);
+        }
+      }
+      // Carregar voz do localStorage (para todos os usuários)
+      const savedVoice = localStorage.getItem('lyriaVoice');
+      if (savedVoice) {
+        setSelectedVoice(savedVoice);
+      }
+    };
+    loadUserPreferences();
+  }, [isAuthenticated, user]);
 
   const fetchConversations = async () => {
     if (isAuthenticated && user) {
@@ -265,7 +289,6 @@ function ChatContent() {
       requestCancellationRef.current = { cancel: () => controller.abort() };
 
       if (isAuthenticated && user) {
-        await setPersona(user.nome, selectedPersona);
         response = await postMessage(user.nome, sentFromChatId, trimmedInput, controller.signal);
 
         if (currentChatId !== sentFromChatId) {
@@ -408,8 +431,26 @@ function ChatContent() {
   };
 
   const toggleSpeech = () => setIsSpeechEnabled((prev) => !prev);
-  const handleVoiceChange = (event) => setSelectedVoice(event.target.value);
-  const handlePersonaChange = (event) => setSelectedPersona(event.target.value);
+  
+  const handleVoiceChange = (event) => {
+    const newVoice = event.target.value;
+    setSelectedVoice(newVoice);
+    localStorage.setItem('lyriaVoice', newVoice);
+    addToast("Voz atualizada!", "success");
+  };
+
+  const handlePersonaChange = async (event) => {
+    const newPersona = event.target.value;
+    setSelectedPersona(newPersona);
+    if (isAuthenticated) {
+      try {
+        await putPersona(newPersona);
+        addToast("Persona atualizada com sucesso!", "success");
+      } catch (error) {
+        addToast("Erro ao atualizar a persona.", "error");
+      }
+    }
+  };
 
   const stripMarkdown = (text) => {
     return text

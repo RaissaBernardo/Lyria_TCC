@@ -114,10 +114,10 @@ function LoginRegisterPage() {
   const handleLogin = async () => {
     setLoading(true);
     try {
-      const response = await login({ email, senha });
-      if (response.sucesso) {
+      const response = await login({ email, senha_hash: senha });
+      if (response.status === "ok") {
         addToast("Login bem-sucedido! Redirecionando...", "success");
-        navigate("/");
+        navigate("/chat");
       } else {
         addToast(response.erro || "Erro ao fazer login.", "error");
       }
@@ -132,17 +132,15 @@ function LoginRegisterPage() {
     const userData = {
       nome,
       email,
-      senha,
+      senha_hash: senha,
       persona: selectedPersona,
     };
     
-    // **AQUI ESTÁ O CONSOLE.LOG SOLICITADO**
-    console.log("Dados que serão enviados para o cadastro:", userData);
-
     setLoading(true);
     try {
       const response = await register(userData);
       if (response.sucesso) {
+        // Salva a voz escolhida no localStorage
         localStorage.setItem('lyriaVoice', selectedVoice);
         addToast("Cadastro realizado com sucesso! Faça o login para continuar.", "success");
         toggleForm(); // Alterna para a tela de login
@@ -174,7 +172,6 @@ function LoginRegisterPage() {
     const voiceName = selectedVoice;
     const testText = `Olá, esta é uma amostra da minha voz. Eu sou ${availableVoices.find(v => v.value === voiceName)?.label}.`;
     
-    // Configura a voz selecionada antes de sintetizar
     const ssml = `
         <speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="pt-BR">
             <voice name="${voiceName}">
