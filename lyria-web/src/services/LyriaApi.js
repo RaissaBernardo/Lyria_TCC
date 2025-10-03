@@ -46,9 +46,9 @@ export const deleteConversation = async (conversationId) => {
   }
 };
 
-export const getConversations = async (username) => {
+export const getConversations = async () => {
   try {
-    const response = await api.get(`/Lyria/${username}/conversas`);
+    const response = await api.get(`/Lyria/conversas`);
     return response.data;
   } catch (error) {
     console.error("Erro ao buscar lista de conversas:", error);
@@ -81,9 +81,9 @@ export const postMessage = async (username, conversationId, question, signal) =>
   }
 };
 
-export const setPersona = async (persona) => {
+export const putPersona = async (persona) => {
   try {
-    const response = await api.post(`/Lyria/PersonaEscolhida`, {
+    const response = await api.put(`/Lyria/PersonaEscolhida`, {
       persona,
     });
     return response.data;
