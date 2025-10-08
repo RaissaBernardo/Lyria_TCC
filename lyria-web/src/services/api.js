@@ -10,7 +10,7 @@ if (!baseURL) {
 
 const api = axios.create({
   baseURL: baseURL,
-
+  withCredentials: true, // garante envio de cookies
   headers: {
     "Content-Type": "application/json",
   },

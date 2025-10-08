@@ -1,72 +1,136 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { login as apiLogin } from '../services/LyriaApi';
+import api from '../services/api'; // Importe a instância do axios
 
 const AuthContext = createContext();
 
-export function AuthProvider({ children }) {
+export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Derivamos o estado de autenticação diretamente do estado do usuário.
-  // Isso garante que eles estejam sempre em sincronia.
-  const isAuthenticated = !!user;
-
+  // Verifica se há sessão ativa no backend ao iniciar
   useEffect(() => {
-    // Verifica se há um usuário salvo no localStorage ao carregar a página
-    try {
-      const storedUser = localStorage.getItem('lyriaUser');
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
+    const checkSession = async () => {
+      try {
+        console.log('🔍 Verificando sessão no backend...');
+        const response = await api.get('/Lyria/check-session');
+        
+        if (response.data.autenticado) {
+          console.log('✅ Sessão ativa encontrada:', response.data);
+          
+          // Recupera dados do localStorage ou usa os da sessão
+          const storedUser = localStorage.getItem('lyriaUser');
+          const userData = storedUser ? JSON.parse(storedUser) : {
+            nome: response.data.usuario,
+            email: response.data.email,
+          };
+          
+          setUser(userData);
+          setIsAuthenticated(true);
+        } else {
+          console.log('❌ Nenhuma sessão ativa no backend');
+          // Limpa dados locais se não há sessão no backend
+          localStorage.removeItem('lyriaUser');
+          setUser(null);
+          setIsAuthenticated(false);
+        }
+      } catch (error) {
+        console.error('❌ Erro ao verificar sessão:', error);
+        // Se der erro, limpa tudo
+        localStorage.removeItem('lyriaUser');
+        setUser(null);
+        setIsAuthenticated(false);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Falha ao ler o usuário do localStorage", error);
-      localStorage.removeItem('lyriaUser');
-    } finally {
-      setLoading(false);
-    }
+    };
+
+    checkSession();
   }, []);
 
   const login = async (credentials) => {
-    const response = await apiLogin(credentials);
-    if (response.sucesso) {
-      setUser(response.usuario);
-      localStorage.setItem('lyriaUser', JSON.stringify(response.usuario));
+    try {
+      console.log('🔐 Iniciando login...');
+      const response = await apiLogin(credentials);
+      
+      if (response.status === 'ok') {
+        // Aguarda um pouco para garantir que o cookie foi salvo
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        // Verifica se a sessão foi realmente criada
+        console.log('🔍 Verificando se sessão foi criada...');
+        const sessionCheck = await api.get('/Lyria/check-session');
+        console.log('📋 Resposta da verificação:', sessionCheck.data);
+        
+        if (!sessionCheck.data.autenticado) {
+          console.error('❌ Sessão não foi criada no backend!');
+          throw new Error('Falha ao criar sessão. Tente novamente.');
+        }
+        
+        const userData = {
+          nome: response.usuario,
+          email: credentials.email,
+          persona: response.persona
+        };
+        
+        setUser(userData);
+        setIsAuthenticated(true);
+        localStorage.setItem('lyriaUser', JSON.stringify(userData));
+        
+        console.log('✅ Login completo e sessão verificada:', userData);
+        return response;
+      }
+      
+      return response;
+    } catch (error) {
+      console.error('❌ Erro no login:', error);
+      throw error;
     }
-    return response;
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('lyriaUser');
+  const logout = async () => {
+    try {
+      console.log('🚪 Fazendo logout...');
+      await api.post('/Lyria/logout');
+      console.log('✅ Logout no backend concluído');
+    } catch (error) {
+      console.error('❌ Erro ao fazer logout no backend:', error);
+    } finally {
+      setUser(null);
+      setIsAuthenticated(false);
+      localStorage.removeItem('lyriaUser');
+      localStorage.removeItem('lyriaPersona');
+      localStorage.removeItem('lyriaVoice');
+      console.log('✅ Dados locais limpos');
+    }
   };
 
-  const updateUser = (updatedUserData) => {
-    const newUser = { ...user, ...updatedUserData };
-    setUser(newUser);
-    localStorage.setItem('lyriaUser', JSON.stringify(newUser));
+  const updateUser = (userData) => {
+    setUser(userData);
+    localStorage.setItem('lyriaUser', JSON.stringify(userData));
   };
 
-  const value = {
-    user,
-    isAuthenticated,
-    loading,
-    login,
-    logout,
-    updateUser,
-  };
-
-  // Não renderiza a aplicação até que a verificação inicial do localStorage seja concluída
   return (
-    <AuthContext.Provider value={value}>
-      {!loading && children}
+    <AuthContext.Provider 
+      value={{ 
+        user, 
+        isAuthenticated, 
+        login, 
+        logout, 
+        updateUser,
+        loading 
+      }}
+    >
+      {children}
     </AuthContext.Provider>
   );
-}
+};
 
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth deve ser usado dentro de um AuthProvider');
   }
   return context;
-}
+};
