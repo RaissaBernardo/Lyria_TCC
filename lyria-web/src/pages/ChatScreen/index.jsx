@@ -1,25 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import "./Styles/styles.css";
 import {
-  FiSend,
-  FiPlus,
-  FiPaperclip,
-  FiMic,
-  FiUser,
-  FiCopy,
-  FiCheck,
-  FiClock,
-  FiX,
-  FiTrash2,
-} from "react-icons/fi";
-import { FaVolumeUp, FaVolumeMute } from "react-icons/fa";
-import { RiRobot2Line } from "react-icons/ri";
-import { Link } from "react-router-dom";
-import AnimatedBotMessage from "../../components/AnimatedBotMessage";
-import LoginPrompt from "../../components/LoginPrompt";
-import ConfirmationModal from "../../components/ConfirmationModal";
-import { useAuth } from "../../context/AuthContext";
-import {
   conversarAnonimo,
   getConversations,
   getMessagesForConversation,
@@ -29,8 +10,8 @@ import {
   putPersona,
   getPersona,
 } from "../../services/LyriaApi";
+import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
-
 import {
   SpeechConfig,
   AudioConfig,
@@ -38,6 +19,14 @@ import {
   SpeechSynthesizer,
   ResultReason,
 } from "microsoft-cognitiveservices-speech-sdk";
+
+import LoginPrompt from "../../components/LoginPrompt";
+import ConfirmationModal from "../../components/ConfirmationModal";
+import HistoryPanel from "../../components/HistoryPanel";
+import ChatHeader from "../../components/ChatHeader";
+import MessageList from "../../components/MessageList";
+import ChatInput from "../../components/ChatInput";
+import PromptSuggestions from "../../components/PromptSuggestions";
 
 const speechConfig = SpeechConfig.fromSubscription(
   import.meta.env.VITE_SPEECH_KEY,
@@ -54,106 +43,13 @@ const availableVoices = [
   { value: "pt-BR-DonatoNeural", label: "Leonardo" },
 ];
 
-const HistoryPanel = ({
-  isVisible,
-  onClose,
-  conversations,
-  loadChat,
-  deleteChat,
-}) => {
-  return (
-    <aside className={`history-panel ${isVisible ? "visible" : ""}`}>
-      <div className="history-header">
-        <h2>Histórico de Conversas</h2>
-        <button onClick={onClose} className="header-icon-btn">
-          <FiX />
-        </button>
-      </div>
-      <div className="history-list">
-        {conversations.length > 0 ? (
-          conversations.map((chat) => (
-            <div key={chat.id} className="history-item-container">
-              <div className="history-item" onClick={() => loadChat(chat.id)}>
-                {chat.titulo || "Conversa sem título"}
-              </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  deleteChat(chat.id);
-                }}
-                className="delete-history-btn"
-              >
-                <FiTrash2 />
-              </button>
-            </div>
-          ))
-        ) : (
-          <p className="no-history-text">Nenhuma conversa ainda.</p>
-        )}
-      </div>
-    </aside>
-  );
-};
-
-const PromptSuggestions = ({ onSuggestionClick }) => (
-  <div className="suggestions-container">
-    <div className="lyria-icon-large">
-      <RiRobot2Line />
-    </div>
-    <h2>Como posso ajudar hoje?</h2>
-    <div className="suggestions-grid">
-      <div
-        className="suggestion-card"
-        onClick={() => onSuggestionClick("Quem é você?")}
-      >
-        <p>
-          <strong>Quem é você?</strong>
-        </p>
-        <span>Descubra a identidade da LyrIA</span>
-      </div>
-      <div
-        className="suggestion-card"
-        onClick={() => onSuggestionClick("Qual a melhor turma do SENAI?")}
-      >
-        <p>
-          <strong>Qual a melhor turma?</strong>
-        </p>
-        <span>Uma pergunta capciosa...</span>
-      </div>
-      <div
-        className="suggestion-card"
-        onClick={() =>
-          onSuggestionClick("Me dê uma ideia para um projeto React")
-        }
-      >
-        <p>
-          <strong>Ideia de projeto</strong>
-        </p>
-        <span>Para inspirar sua criatividade</span>
-      </div>
-      <div
-        className="suggestion-card"
-        onClick={() => onSuggestionClick("Como você funciona?")}
-      >
-        <p>
-          <strong>Como você funciona?</strong>
-        </p>
-        <span>Explore os bastidores da IA</span>
-      </div>
-    </div>
-  </div>
-);
-
 function ChatContent() {
   const { user, isAuthenticated } = useAuth();
   const { addToast } = useToast();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isBotTyping, setIsBotTyping] = useState(false);
-  const [copiedId, setCopiedId] = useState(null);
   const [isHistoryVisible, setHistoryVisible] = useState(false);
-  const messagesEndRef = useRef(null);
-  const textareaRef = useRef(null);
   const requestCancellationRef = useRef({ cancel: () => {} });
 
   const [conversations, setConversations] = useState([]);
@@ -162,8 +58,8 @@ function ChatContent() {
   const [isListening, setIsListening] = useState(false);
   const [isSpeechEnabled, setIsSpeechEnabled] = useState(true);
   const [selectedVoice, setSelectedVoice] = useState(availableVoices[0].value);
-  const [isAttachmentMenuVisible, setAttachmentMenuVisible] = useState(false);
-  const [chatBodyAnimationClass, setChatBodyAnimationClass] = useState("fade-in");
+  const [chatBodyAnimationClass, setChatBodyAnimationClass] =
+    useState("fade-in");
   const [isLoginPromptVisible, setLoginPromptVisible] = useState(false);
   const [isDeleteModalVisible, setDeleteModalVisible] = useState(false);
   const [chatToDelete, setChatToDelete] = useState(null);
@@ -182,22 +78,15 @@ function ChatContent() {
     fetchPersonas();
   }, []);
 
-  // Carregar persona do usuário quando autenticado e personas disponíveis
   useEffect(() => {
     const loadUserPersona = async () => {
       if (isAuthenticated && user && Object.keys(personas).length > 0) {
         try {
           const personaResponse = await getPersona();
-          console.log("Persona recebida do backend:", personaResponse);
-          // Extrai o valor correto do objeto retornado
-          const personaValue = personaResponse?.persona_escolhida || personaResponse;
-          console.log("Valor da persona extraído:", personaValue);
-          // Verifica se a persona existe nas personas disponíveis
+          const personaValue =
+            personaResponse?.persona_escolhida || personaResponse;
           if (personaValue && personas[personaValue]) {
-            console.log("Setando persona para:", personaValue);
             setSelectedPersona(personaValue);
-          } else {
-            console.log("Persona não encontrada nas disponíveis:", personaValue);
           }
         } catch (error) {
           console.error("Erro ao buscar persona do usuário:", error);
@@ -225,29 +114,26 @@ function ChatContent() {
   }, [isAuthenticated, user]);
 
   useEffect(() => {
+    const savedVoice = localStorage.getItem("lyriaVoice");
+    if (savedVoice) {
+      setSelectedVoice(savedVoice);
+    }
+  }, []);
+
+  useEffect(() => {
     speechConfig.speechSynthesisVoiceName = selectedVoice;
   }, [selectedVoice]);
 
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      const scrollHeight = textareaRef.current.scrollHeight;
-      textareaRef.current.style.height = `${scrollHeight}px`;
-    }
-  }, [input]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, isBotTyping]);
-
-  const handleCopyToClipboard = (text, id) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
+  const stripMarkdown = (text) => {
+    return text
+      .replace(/```[\s\S]*?```/g, " ")
+      .replace(/`/g, "")
+      .replace(/\*\*/g, "")
+      .replace(/\*/g, "")
+      .replace(/#{1,6}\s/g, "")
+      .replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1")
+      .replace(/!\[[^\]]*\]\([^\)]+\)/g, " ")
+      .trim();
   };
 
   const speakResponse = (text) => {
@@ -286,29 +172,28 @@ function ChatContent() {
     const sentFromChatId = currentChatId;
 
     try {
-      let response;
       const controller = new AbortController();
       requestCancellationRef.current = { cancel: () => controller.abort() };
 
-      if (isAuthenticated && user) {
-        response = await postMessage(trimmedInput, controller.signal);
+      const response =
+        isAuthenticated && user
+          ? await postMessage(trimmedInput, controller.signal)
+          : await conversarAnonimo(
+              trimmedInput,
+              selectedPersona,
+              controller.signal
+            );
 
-        if (currentChatId !== sentFromChatId) {
-          console.log("Request was for a different chat. Ignoring response.");
-          return; // Ignore the response
-        }
+      if (controller.signal.aborted) return;
 
-        if (response.new_conversa_id && !sentFromChatId) {
-          setCurrentChatId(response.new_conversa_id);
-          fetchConversations();
-        }
-      } else {
-        response = await conversarAnonimo(trimmedInput, selectedPersona, controller.signal);
-      }
-
-      if (controller.signal.aborted) {
-        console.log("Request aborted, not setting bot message.");
-        return;
+      if (
+        isAuthenticated &&
+        user &&
+        response.new_conversa_id &&
+        !sentFromChatId
+      ) {
+        setCurrentChatId(response.new_conversa_id);
+        fetchConversations();
       }
 
       const botMessage = {
@@ -320,9 +205,7 @@ function ChatContent() {
       setMessages((prev) => [...prev, botMessage]);
       speakResponse(response.resposta);
     } catch (error) {
-      if (error.name === 'AbortError') {
-        console.log('Fetch aborted');
-      } else {
+      if (error.name !== "AbortError") {
         const errorMessage = {
           id: crypto.randomUUID(),
           sender: "bot",
@@ -338,40 +221,29 @@ function ChatContent() {
     }
   };
 
-  const handleKeyDown = (event) => {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
-      handleSend();
-    }
-  };
-
   const handleMicClick = () => {
     if (isListening) return;
-
     const audioConfig = AudioConfig.fromDefaultMicrophoneInput();
     const recognizer = new SpeechRecognizer(speechConfig, audioConfig);
-
     setIsListening(true);
     setInput("Ouvindo... pode falar.");
-
     recognizer.recognizeOnceAsync(
-        (result) => {
-            if (result.reason === ResultReason.RecognizedSpeech) {
-                const recognizedText = result.text;
-                handleSend(recognizedText);
-            } else {
-                setInput("Não consegui entender. Tente novamente.");
-                setTimeout(() => setInput(""), 2000);
-            }
-            recognizer.close();
-            setIsListening(false);
-        },
-        (error) => {
-            setInput("Erro ao acessar o microfone.");
-            recognizer.close();
-            setIsListening(false);
-            setTimeout(() => setInput(""), 2000);
+      (result) => {
+        if (result.reason === ResultReason.RecognizedSpeech) {
+          handleSend(result.text);
+        } else {
+          setInput("Não consegui entender. Tente novamente.");
+          setTimeout(() => setInput(""), 2000);
         }
+        recognizer.close();
+        setIsListening(false);
+      },
+      () => {
+        setInput("Erro ao acessar o microfone.");
+        recognizer.close();
+        setIsListening(false);
+        setTimeout(() => setInput(""), 2000);
+      }
     );
   };
 
@@ -385,7 +257,7 @@ function ChatContent() {
       setCurrentChatId(null);
       setMessages([]);
       setChatBodyAnimationClass("fade-in");
-    }, 500); // Duração da animação de fade-out
+    }, 500);
   };
 
   const loadChat = async (id) => {
@@ -396,7 +268,6 @@ function ChatContent() {
     try {
       const response = await getMessagesForConversation(id);
       setCurrentChatId(id);
-      // Adiciona a propriedade 'animate: false' para mensagens carregadas
       const historicalMessages = response.mensagens.map((msg) => ({
         ...msg,
         animate: false,
@@ -418,58 +289,17 @@ function ChatContent() {
     try {
       await deleteConversation(chatToDelete);
       addToast("Conversa deletada com sucesso.", "success");
-      fetchConversations(); 
+      fetchConversations();
       if (currentChatId === chatToDelete) {
         setCurrentChatId(null);
         setMessages([]);
       }
     } catch (error) {
       addToast("Erro ao deletar conversa.", "error");
-      console.error("Erro ao deletar conversa", error);
     } finally {
       setDeleteModalVisible(false);
       setChatToDelete(null);
     }
-  };
-
-  const toggleSpeech = () => setIsSpeechEnabled((prev) => !prev);
-  
-  const handleVoiceChange = (event) => {
-    const newVoice = event.target.value;
-    setSelectedVoice(newVoice);
-    localStorage.setItem('lyriaVoice', newVoice);
-    addToast("Voz atualizada!", "success");
-  };
-
-  const handlePersonaChange = async (event) => {
-    const newPersona = event.target.value;
-    setSelectedPersona(newPersona);
-    if (isAuthenticated) {
-      try {
-        await putPersona(newPersona);
-        addToast("Persona atualizada com sucesso!", "success");
-      } catch (error) {
-        addToast("Erro ao atualizar a persona.", "error");
-      }
-    }
-  };
-
-  const stripMarkdown = (text) => {
-    return text
-      // Remove code blocks
-      .replace(/```[\s\S]*?```/g, ' ')
-      // Remove inline code
-      .replace(/`/g, '')
-      // Remove bold and italics
-      .replace(/\*\*/g, '')
-      .replace(/\*/g, '')
-      // Remove headings
-      .replace(/#{1,6}\s/g, '')
-      // Remove links, keeping the text
-      .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')
-      // Remove images
-      .replace(/!\[[^\]]*\]\([^\)]+\)/g, ' ')
-      .trim();
   };
 
   const handleHistoryClick = () => {
@@ -485,6 +315,26 @@ function ChatContent() {
       setLoginPromptVisible(true);
     } else {
       startNewChat();
+    }
+  };
+
+  const handleVoiceChange = (event) => {
+    const newVoice = event.target.value;
+    setSelectedVoice(newVoice);
+    localStorage.setItem("lyriaVoice", newVoice);
+    addToast("Voz atualizada!", "success");
+  };
+
+  const handlePersonaChange = async (event) => {
+    const newPersona = event.target.value;
+    setSelectedPersona(newPersona);
+    if (isAuthenticated) {
+      try {
+        await putPersona(newPersona);
+        addToast("Persona atualizada com sucesso!", "success");
+      } catch (error) {
+        addToast("Erro ao atualizar a persona.", "error");
+      }
     }
   };
 
@@ -513,158 +363,33 @@ function ChatContent() {
       <main
         className={`galaxy-chat-area ${isHistoryVisible ? "history-open" : ""}`}
       >
-        <header className="galaxy-chat-header">
-          <button
-            className="header-icon-btn"
-            onClick={handleHistoryClick}
-            title="Histórico"
-          >
-            <FiClock />
-          </button>
-          <Link to="/" className="header-title-link">
-            <h1>LyrIA</h1>
-          </Link>
-          <div className="header-voice-controls">
-            {Object.keys(personas).length > 0 && (
-              <select
-                value={selectedPersona}
-                onChange={handlePersonaChange}
-                className="voice-select"
-                title="Selecionar persona"
-              >
-                {Object.keys(personas).map((key) => (
-                  <option key={key} value={key}>
-                    {key.charAt(0).toUpperCase() + key.slice(1)}
-                  </option>
-                ))}
-              </select>
-            )}
-            <select
-              value={selectedVoice}
-              onChange={handleVoiceChange}
-              className="voice-select"
-              title="Selecionar voz"
-            >
-              {availableVoices.map((voice) => (
-                <option key={voice.value} value={voice.value}>
-                  {voice.label}
-                </option>
-              ))}
-            </select>
-            <button
-              onClick={toggleSpeech}
-              className="header-icon-btn"
-              title={isSpeechEnabled ? "Desativar voz" : "Ativar voz"}
-            >
-              {isSpeechEnabled ? <FaVolumeUp /> : <FaVolumeMute />}
-            </button>
-            <button
-              className="header-icon-btn"
-              onClick={handleNewChatClick}
-              title="Novo Chat"
-            >
-              <FiPlus />
-            </button>
-          </div>
-        </header>
-
+        <ChatHeader
+          onHistoryClick={handleHistoryClick}
+          personas={personas}
+          selectedPersona={selectedPersona}
+          onPersonaChange={handlePersonaChange}
+          availableVoices={availableVoices}
+          selectedVoice={selectedVoice}
+          onVoiceChange={handleVoiceChange}
+          isSpeechEnabled={isSpeechEnabled}
+          onToggleSpeech={() => setIsSpeechEnabled((p) => !p)}
+          onNewChatClick={handleNewChatClick}
+        />
         <div className={`galaxy-chat-body ${chatBodyAnimationClass}`}>
           {messages.length === 0 ? (
             <PromptSuggestions onSuggestionClick={handleSend} />
           ) : (
-            messages.map((msg, index) => (
-              <div
-                key={msg.id || index}
-                className={`message-wrapper ${msg.sender}`}
-              >
-                <div className="avatar-icon">
-                  {msg.sender === "bot" ? <RiRobot2Line /> : <FiUser />}
-                </div>
-                <div className="message-content">
-                  <span className="sender-name">
-                    {msg.sender === "bot" ? "LyrIA" : "Você"}
-                  </span>
-                  <AnimatedBotMessage
-                    fullText={msg.text}
-                    animate={msg.animate}
-                  />
-                  {msg.sender === "bot" && (
-                    <button
-                      className="copy-btn"
-                      onClick={() =>
-                        handleCopyToClipboard(msg.text, msg.id || index)
-                      }
-                    >
-                      {copiedId === (msg.id || index) ? (
-                        <FiCheck />
-                      ) : (
-                        <FiCopy />
-                      )}
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))
+            <MessageList messages={messages} isBotTyping={isBotTyping} />
           )}
-          {isBotTyping && (
-            <div className="message-wrapper bot">
-              <div className="avatar-icon">
-                <RiRobot2Line />
-              </div>
-              <div className="message-content">
-                <span className="sender-name">LyrIA</span>
-                <div className="typing-indicator">
-                  <span />
-                  <span />
-                  <span />
-                </div>
-              </div>
-            </div>
-          )}
-          <div ref={messagesEndRef} />
         </div>
-
-        <footer className="galaxy-chat-input-container">
-          <div className="attachment-container">
-            {isAttachmentMenuVisible && (
-              <div className="attachment-menu">
-                <button className="attachment-option" onClick={() => { addToast('Funcionalidade ainda não implementada.', 'info'); setAttachmentMenuVisible(false); }}>
-                  <span>Anexar Arquivo</span>
-                </button>
-                <button className="attachment-option" onClick={() => { addToast('Funcionalidade ainda não implementada.', 'info'); setAttachmentMenuVisible(false); }}>
-                  <span>Usar a Câmera</span>
-                </button>
-                <button className="attachment-option" onClick={() => { addToast('Funcionalidade ainda não implementada.', 'info'); setAttachmentMenuVisible(false); }}>
-                  <span>Enviar Foto/Vídeo da Galeria</span>
-                </button>
-              </div>
-            )}
-            <FiPaperclip
-              className="input-icon"
-              onClick={() => setAttachmentMenuVisible(!isAttachmentMenuVisible)}
-            />
-          </div>
-          <textarea
-            ref={textareaRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Digite sua mensagem para LyrIA..."
-            rows="1"
-            disabled={isBotTyping || isListening}
-          />
-          <FiMic
-            className={`input-icon mic-icon ${isListening ? "listening" : ""}`}
-            onClick={handleMicClick}
-          />
-          <button
-            onClick={() => handleSend()}
-            disabled={!input.trim() || isBotTyping || isListening}
-            className="send-btn"
-          >
-            <FiSend />
-          </button>
-        </footer>
+        <ChatInput
+          input={input}
+          setInput={setInput}
+          handleSend={handleSend}
+          handleMicClick={handleMicClick}
+          isBotTyping={isBotTyping}
+          isListening={isListening}
+        />
       </main>
     </>
   );
