@@ -31,7 +31,8 @@ Session(app)
 
 allowed_origins = [
     "http://localhost:5173",
-    "http://localhost:3000"
+    "http://localhost:3000",
+    "http://10.110.12.20:5173"
 ]
 
 if IS_PRODUCTION:
