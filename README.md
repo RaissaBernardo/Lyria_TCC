@@ -24,7 +24,7 @@ A aplicação possui **interface web moderna** e **back-end robusto**, utilizand
 ## ✨ Funcionalidades
 
 * 🎨 **Interface de Chat Interativa** – Front-end em **React**, responsivo e intuitivo.
-* 🧠 **IA com LLM (Gemma via Ollama)** – Respostas ricas e contextuais.
+* 🧠 **IA com LLM (Via API Grok e HuggingFace)** – Respostas ricas e contextuais.
 * 🌐 **Busca Inteligente na Web** – Classificador com **Scikit-learn** que decide quando buscar dados pela **SerpAPI**.
 * 🎭 **Personas Customizáveis** – Defina diferentes estilos de resposta (ex: professora, assistente empresarial).
 * 💾 **Memória e Histórico** – Conversas salvas em **SQLite** para manter o contexto.
