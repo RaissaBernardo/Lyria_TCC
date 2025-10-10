@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import LoginPrompt from '../../components/LoginPrompt';
 import { baseURL } from '../../services/api';
 import { FaTimes } from "react-icons/fa";
-import { FiMail, FiGithub, FiInstagram } from "react-icons/fi";
+import { FiGithub, FiInstagram } from "react-icons/fi";
 import logoImage from '/img/LogoBranca.png';
 
 function InitialScreen() {
@@ -17,15 +17,13 @@ function InitialScreen() {
   const navigate = useNavigate();
   const [dropdownVisible, setDropdownVisible] = useState(false);
 
-  // Array links de contato
   const contactLinks = [
-   { icon: <FiMail />, label: "Email", href: "mailto:lyriasenai@gmail.com?subject=Contato%20LyrIA", targetBlank: true },
     { icon: <FiGithub />, label: "LyrIA-Project", href: "https://github.com/RaissaBernardo/Lyria", targetBlank: true },
-    { icon: <FiInstagram />, label: "@vii_amaro", href: "https://www.instagram.com/vii_amaro", targetBlank: true },
     { icon: <FiInstagram />, label: "@rah_antonia", href: "https://www.instagram.com/rah_antonia", targetBlank: true },
     { icon: <FiInstagram />, label: "@antonybriito", href: "https://www.instagram.com/antonybriito", targetBlank: true },
     { icon: <FiInstagram />, label: "@jaogabxs", href: "https://www.instagram.com/jaogabxs", targetBlank: true },
     { icon: <FiInstagram />, label: "@gabrielcardos095", href: "https://www.instagram.com/gabrielcardos095", targetBlank: true },
+    { icon: <FiInstagram />, label: "@vii_amaro", href: "https://www.instagram.com/vii_amaro", targetBlank: true },
     { icon: <FiInstagram />, label: "@juli_naners", href: "https://www.instagram.com/juli_naners", targetBlank: true },
   ];
 
@@ -164,11 +162,11 @@ function InitialScreen() {
             <div className="contact-info">
               <p>Para dúvidas, sugestões ou suporte, entre em contato conosco através dos seguintes canais:</p>
               <div className="contact-links">
-                {contactLinks.map((link, index) => (
+                {contactLinks.map((link) => (
                   <a
-                    key={index}
+                    key={link.href}
                     href={link.href}
-                    target={link.targetBlank ? "_blank" : "_self"}
+                    target={link.targetBlank ? "_blank" : undefined}
                     rel={link.targetBlank ? "noopener noreferrer" : ""}
                     className="contact-link-item"
                   >
@@ -181,6 +179,7 @@ function InitialScreen() {
           </div>
         </div>
       )}
+
     </div>
   );
 }
