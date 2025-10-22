@@ -1,3 +1,4 @@
+import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from testeDaIa import perguntar_ollama, buscar_na_web, get_persona_texto
@@ -13,10 +14,54 @@ from banco.banco import (
     carregar_memorias
 )
 from classificadorDaWeb.classificador_busca_web import deve_buscar_na_web
+import speech_recognition as sr
+import uuid
 from waitress import serve
 
 app = Flask(__name__)
 CORS(app)
+
+@app.route('/Lyria/audio-input', methods=['POST'])
+def audio_input():
+    if 'audio' not in request.files:
+        return jsonify({"erro": "Nenhum arquivo de áudio enviado"}), 400
+
+    audio_file = request.files['audio']
+    persona = request.form.get('persona', 'professor')
+
+    # Gerar um nome de arquivo único e salvar o áudio
+    temp_audio_path = f"{uuid.uuid4()}.m4a"
+    audio_file.save(temp_audio_path)
+
+    # Transcrever o áudio
+    recognizer = sr.Recognizer()
+    try:
+        with sr.AudioFile(temp_audio_path) as source:
+            audio_data = recognizer.record(source)
+            texto_transcrito = recognizer.recognize_google(audio_data, language='pt-BR')
+
+        # Remover o arquivo temporário
+        os.remove(temp_audio_path)
+
+        # Enviar o texto para o modelo de conversação
+        contexto_web = None
+        if deve_buscar_na_web(texto_transcrito):
+            contexto_web = buscar_na_web(texto_transcrito)
+
+        resposta = perguntar_ollama(texto_transcrito, None, None, persona, contexto_web)
+
+        return jsonify({"resposta": resposta, "texto_transcrito": texto_transcrito})
+
+    except sr.UnknownValueError:
+        os.remove(temp_audio_path)
+        return jsonify({"erro": "Não foi possível entender o áudio"}), 400
+    except sr.RequestError as e:
+        os.remove(temp_audio_path)
+        return jsonify({"erro": f"Erro no serviço de reconhecimento de fala; {e}"}), 500
+    except Exception as e:
+        if os.path.exists(temp_audio_path):
+            os.remove(temp_audio_path)
+        return jsonify({"erro": f"Erro interno: {str(e)}"}), 500
 
 @app.route('/Lyria/conversar', methods=['POST'])
 def conversarSemConta():
