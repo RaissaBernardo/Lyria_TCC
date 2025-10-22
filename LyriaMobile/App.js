@@ -6,7 +6,9 @@ import { Audio } from 'expo-av';
 
 export default function App() {
   const [recording, setRecording] = useState();
-  const [appState, setAppState] = useState('idle'); // 'idle' | 'recording' | 'sending'
+  const [sound, setSound] = useState();
+  const [appState, setAppState] = useState('idle'); // 'idle' | 'recording' | 'recorded' | 'playing'
+  const [audioUri, setAudioUri] = useState(null);
 
   /**
    * Solicita permissão do microfone e inicia a gravação de áudio.
@@ -34,27 +36,89 @@ export default function App() {
   }
 
   /**
-   * Para a gravação, envia o áudio para o servidor e processa a resposta.
+   * Para a gravação de áudio e armazena o URI do arquivo.
    */
   async function stopRecording() {
     if (!recording) return;
 
-    setAppState('sending');
+    setAppState('recorded');
     await recording.stopAndUnloadAsync();
     const uri = recording.getURI();
+    setAudioUri(uri);
     setRecording(undefined);
 
-    // Criar FormData para enviar o arquivo de áudio
+    // FUTURA INTEGRAÇÃO: Descomente a linha abaixo para enviar o áudio para o servidor
+    // sendAudioToServer(uri);
+  }
+
+  /**
+   * Reproduz o som gravado a partir do URI armazenado.
+   */
+  async function playSound() {
+    if (!audioUri) return;
+
+    try {
+      setAppState('playing');
+      const { sound } = await Audio.Sound.createAsync({ uri: audioUri });
+      setSound(sound);
+
+      // Quando a reprodução terminar, volta ao estado 'recorded'
+      sound.setOnPlaybackStatusUpdate((status) => {
+        if (status.isLoaded && status.didJustFinish) {
+          setAppState('recorded');
+          setSound(undefined); // Limpa o som
+        }
+      });
+
+      await sound.playAsync();
+    } catch (error) {
+      console.error("Falha ao reproduzir o som", error);
+      setAppState('recorded'); // Volta ao estado anterior em caso de erro
+    }
+  }
+
+  /**
+   * Para a reprodução do som e descarrega o áudio da memória.
+   */
+  async function stopSound() {
+    if (sound) {
+      await sound.stopAsync();
+      await sound.unloadAsync();
+      setSound(undefined);
+      setAppState('recorded');
+    }
+  }
+
+  /**
+   * Descarta o áudio gravado e redefine o estado do aplicativo para 'idle'.
+   */
+  function discardRecording() {
+    if (sound) {
+      sound.unloadAsync();
+    }
+    setAudioUri(null);
+    setAppState('idle');
+    setSound(undefined);
+    setRecording(undefined);
+  }
+
+  /**
+   * (COMENTADO PARA FUTURA INTEGRAÇÃO)
+   * Envia o áudio gravado para o servidor.
+   * @param {string} uri - O URI local do arquivo de áudio.
+   */
+  /*
+  async function sendAudioToServer(uri) {
     const formData = new FormData();
     formData.append('audio', {
       uri,
-      name: `recording-${Date.now()}.m4a`, // O Expo AV grava em .m4a no iOS/Android
+      name: `recording-${Date.now()}.m4a`,
       type: 'audio/m4a',
     });
-    formData.append('persona', 'professor'); // ou qualquer outra persona
+    formData.append('persona', 'professor');
 
     try {
-      // ** IMPORTANTE: Substitua pelo IP local da sua máquina onde o back-end está rodando **
+      // ** IMPORTANTE: Substitua pelo IP local da sua máquina **
       const response = await fetch('http://192.168.0.101:5000/Lyria/audio-input', {
         method: 'POST',
         headers: {
@@ -67,18 +131,16 @@ export default function App() {
 
       if (response.ok) {
         console.log('Resposta do servidor:', responseData.resposta);
-        console.log('Texto transcrito:', responseData.texto_transcrito);
-        // Aqui você pode fazer algo com a resposta, como exibi-la na tela
+        Alert.alert('Sucesso', `Texto Transcrito: ${responseData.texto_transcrito}`);
       } else {
-        Alert.alert('Erro na resposta', responseData.erro || 'Ocorreu um erro no servidor.');
+        Alert.alert('Erro na resposta', responseData.erro || 'Ocorreu um erro.');
       }
     } catch (error) {
       console.error('Falha ao enviar o áudio', error);
-      Alert.alert('Erro de conexão', 'Não foi possível se conectar ao servidor. Verifique o endereço IP e a conexão de rede.');
-    } finally {
-      setAppState('idle'); // Volta ao estado inicial
+      Alert.alert('Erro de conexão', 'Não foi possível se conectar ao servidor.');
     }
   }
+  */
 
   /**
    * Alterna entre iniciar e parar a gravação.
@@ -98,11 +160,32 @@ export default function App() {
     switch (appState) {
       case 'recording':
         return 'Gravando...';
-      case 'sending':
-        return 'Enviando...';
+      case 'recorded':
+        return 'Gravação concluída';
+      case 'playing':
+        return 'Reproduzindo...';
       default:
         return 'Pressione para gravar';
     }
+  }
+
+  /**
+   * Renderiza os controles de reprodução (play/stop, trash) se um áudio foi gravado.
+   */
+  function renderPlaybackControls() {
+    if (appState === 'recorded' || appState === 'playing') {
+      return (
+        <View style={styles.playbackContainer}>
+          <Pressable style={styles.controlButton} onPress={appState === 'playing' ? stopSound : playSound}>
+            <FontAwesome name={appState === 'playing' ? "stop" : "play"} size={30} color="#ffffff" />
+          </Pressable>
+          <Pressable style={styles.controlButton} onPress={discardRecording}>
+            <FontAwesome name="trash" size={30} color="#ffffff" />
+          </Pressable>
+        </View>
+      );
+    }
+    return null;
   }
 
   return (
@@ -119,7 +202,7 @@ export default function App() {
             pressed && styles.micButtonPressed,
           ]}
           onPress={handleRecordButtonPress}
-          disabled={appState === 'sending'}
+          disabled={appState === 'recorded' || appState === 'playing'}
         >
           <FontAwesome
             name="microphone"
@@ -129,6 +212,7 @@ export default function App() {
         </Pressable>
       </View>
       <Text style={styles.statusText}>{getStatusText()}</Text>
+      {renderPlaybackControls()}
     </View>
   );
 }
@@ -183,5 +267,16 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  playbackContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '60%',
+    marginTop: 20,
+  },
+  controlButton: {
+    padding: 20,
+    borderRadius: 50,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
   }
 });
