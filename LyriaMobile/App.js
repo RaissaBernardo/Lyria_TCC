@@ -112,8 +112,9 @@ export default function App() {
     };
 
     ws.current.onerror = (e) => {
-      console.error('DIAGNÓSTICO: Erro no WebSocket:', e.message);
-      Alert.alert('Erro de Conexão', `Não foi possível se conectar. Detalhes: ${e.message}`);
+      // Log do objeto de erro completo para diagnóstico
+      console.error('DIAGNÓSTICO: Objeto de erro do WebSocket:', JSON.stringify(e, null, 2));
+      Alert.alert('Erro de Conexão', `Não foi possível se conectar. Detalhes: ${e.message || 'Verifique os logs do console para mais informações.'}`);
       setAppState('idle');
     };
 
