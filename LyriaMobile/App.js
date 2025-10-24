@@ -55,11 +55,14 @@ export default function App() {
     ws.current = new WebSocket("wss://lyria-servicodetranscricao.onrender.com/ws");
 
     ws.current.onopen = async () => {
+      console.log('DIAGNÓSTICO: Conexão WebSocket aberta.');
       try {
         const audioData = await readAsStringAsync(uri, {
           encoding: 'base64',
         });
+        console.log('DIAGNÓSTICO: Áudio lido, enviando...');
         ws.current.send(audioData);
+        console.log('DIAGNÓSTICO: Áudio enviado com sucesso.');
       } catch (error) {
         console.error('Falha ao ler ou enviar o arquivo de áudio', error);
         Alert.alert('Erro', 'Não foi possível enviar o áudio.');
@@ -68,6 +71,7 @@ export default function App() {
     };
 
     ws.current.onmessage = async (e) => {
+      console.log('DIAGNÓSTICO: Mensagem recebida do servidor.');
       try {
         const responseUri = `${cacheDirectory}response-${Date.now()}.mp3`;
 
@@ -75,6 +79,7 @@ export default function App() {
             encoding: 'base64',
         });
 
+        console.log('DIAGNÓSTICO: Resposta de áudio salva, tocando agora.');
         const { sound } = await Audio.Sound.createAsync({ uri: responseUri });
 
         sound.setOnPlaybackStatusUpdate((status) => {
@@ -95,13 +100,18 @@ export default function App() {
     };
 
     ws.current.onerror = (e) => {
-      console.error('WebSocket Error:', e.message);
-      Alert.alert('Erro de Conexão', 'Não foi possível se conectar ao servidor.');
+      console.error('DIAGNÓSTICO: Erro no WebSocket:', e.message);
+      Alert.alert('Erro de Conexão', `Não foi possível se conectar ao servidor. Detalhes: ${e.message}`);
       setAppState('idle');
     };
 
-    ws.current.onclose = () => {
-      console.log('WebSocket connection closed');
+    ws.current.onclose = (e) => {
+      console.log('DIAGNÓSTICO: Conexão WebSocket fechada.', `Código: ${e.code}, Motivo: ${e.reason}`);
+      // Failsafe: se a conexão fechar enquanto ainda estiver processando, reseta o estado.
+      if (appState === 'processing') {
+        Alert.alert('Conexão Encerrada', 'A conexão com o servidor foi encerrada inesperadamente.');
+        setAppState('idle');
+      }
     };
   }
 
