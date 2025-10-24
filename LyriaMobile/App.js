@@ -41,12 +41,12 @@ export default function App() {
   async function stopRecording() {
     if (!recording) return;
 
-    setAppState('processing');
+    setAppState('sending');
     await recording.stopAndUnloadAsync();
     const uri = recording.getURI();
     setRecording(undefined);
 
-    // Garante que a reprodução de áudio subsequente use o viva-voz no iOS
+    // Garante que o áudio não saia pelo alto-falante auricular no iOS
     await Audio.setAudioModeAsync({
       allowsRecordingIOS: false,
     });
@@ -56,45 +56,23 @@ export default function App() {
 
     ws.current.onopen = async () => {
       try {
-        // Ler o arquivo de áudio como base64
         const audioData = await FileSystem.readAsStringAsync(uri, {
           encoding: FileSystem.EncodingType.Base64,
         });
-        // Enviar os dados via WebSocket
         ws.current.send(audioData);
+
+        // Retorna ao estado 'idle' e informa o usuário.
+        setAppState('idle');
+        Alert.alert('Sucesso', 'Áudio enviado para processamento.');
+
+        // Fecha a conexão após um curto período para garantir que a mensagem foi enviada.
+        setTimeout(() => {
+          ws.current.close();
+        }, 1000);
+
       } catch (error) {
         console.error('Falha ao ler ou enviar o arquivo de áudio', error);
         Alert.alert('Erro', 'Não foi possível enviar o áudio.');
-        setAppState('idle');
-      }
-    };
-
-    ws.current.onmessage = async (e) => {
-      try {
-        // A resposta do servidor deve ser uma string base64 representando o arquivo de áudio.
-        const responseUri = `${FileSystem.cacheDirectory}response-${Date.now()}.mp3`;
-
-        // Escrever a string base64 recebida em um arquivo local.
-        await FileSystem.writeAsStringAsync(responseUri, e.data, {
-            encoding: FileSystem.EncodingType.Base64,
-        });
-
-        // Reproduzir o áudio recebido
-        const { sound } = await Audio.Sound.createAsync({ uri: responseUri });
-
-        sound.setOnPlaybackStatusUpdate((status) => {
-          if (status.isLoaded && status.didJustFinish) {
-            setAppState('idle');
-            sound.unloadAsync();
-            FileSystem.deleteAsync(responseUri); // Opcional: limpar o cache
-          }
-        });
-
-        await sound.playAsync();
-
-      } catch (error) {
-        console.error('Falha ao processar ou reproduzir a resposta', error);
-        Alert.alert('Erro', 'Não foi possível reproduzir a resposta do servidor.');
         setAppState('idle');
       }
     };
@@ -103,10 +81,6 @@ export default function App() {
       console.error('WebSocket Error:', e.message);
       Alert.alert('Erro de Conexão', 'Não foi possível se conectar ao servidor.');
       setAppState('idle');
-    };
-
-    ws.current.onclose = () => {
-      console.log('WebSocket connection closed');
     };
   }
 
@@ -128,8 +102,8 @@ export default function App() {
     switch (appState) {
       case 'recording':
         return 'Gravando...';
-      case 'processing':
-        return 'Processando...';
+      case 'sending':
+        return 'Enviando...';
       default:
         return 'Pressione para gravar';
     }
@@ -149,7 +123,7 @@ export default function App() {
             pressed && styles.micButtonPressed,
           ]}
           onPress={handleRecordButtonPress}
-          disabled={appState === 'processing'}
+          disabled={appState === 'sending'}
         >
           <FontAwesome
             name="microphone"
