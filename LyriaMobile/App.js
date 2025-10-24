@@ -3,7 +3,7 @@ import { StyleSheet, View, Pressable, Text, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
-import { readAsStringAsync } from 'expo-file-system/legacy';
+import { readAsStringAsync, writeAsStringAsync, cacheDirectory, deleteAsync } from 'expo-file-system/legacy';
 
 export default function App() {
   const [recording, setRecording] = useState();
@@ -41,12 +41,12 @@ export default function App() {
   async function stopRecording() {
     if (!recording) return;
 
-    setAppState('sending');
+    setAppState('processing');
     await recording.stopAndUnloadAsync();
     const uri = recording.getURI();
     setRecording(undefined);
 
-    // Garante que o áudio não saia pelo alto-falante auricular no iOS
+    // Garante que a reprodução de áudio subsequente use o viva-voz no iOS
     await Audio.setAudioModeAsync({
       allowsRecordingIOS: false,
     });
@@ -60,19 +60,36 @@ export default function App() {
           encoding: 'base64',
         });
         ws.current.send(audioData);
-
-        // Retorna ao estado 'idle' e informa o usuário.
-        setAppState('idle');
-        Alert.alert('Sucesso', 'Áudio enviado para processamento.');
-
-        // Fecha a conexão após um curto período para garantir que a mensagem foi enviada.
-        setTimeout(() => {
-          ws.current.close();
-        }, 1000);
-
       } catch (error) {
         console.error('Falha ao ler ou enviar o arquivo de áudio', error);
         Alert.alert('Erro', 'Não foi possível enviar o áudio.');
+        setAppState('idle');
+      }
+    };
+
+    ws.current.onmessage = async (e) => {
+      try {
+        const responseUri = `${cacheDirectory}response-${Date.now()}.mp3`;
+
+        await writeAsStringAsync(responseUri, e.data, {
+            encoding: 'base64',
+        });
+
+        const { sound } = await Audio.Sound.createAsync({ uri: responseUri });
+
+        sound.setOnPlaybackStatusUpdate((status) => {
+          if (status.isLoaded && status.didJustFinish) {
+            setAppState('idle');
+            sound.unloadAsync();
+            deleteAsync(responseUri, { idempotent: true });
+          }
+        });
+
+        await sound.playAsync();
+
+      } catch (error) {
+        console.error('Falha ao processar ou reproduzir a resposta', error);
+        Alert.alert('Erro', 'Não foi possível reproduzir a resposta do servidor.');
         setAppState('idle');
       }
     };
@@ -81,6 +98,10 @@ export default function App() {
       console.error('WebSocket Error:', e.message);
       Alert.alert('Erro de Conexão', 'Não foi possível se conectar ao servidor.');
       setAppState('idle');
+    };
+
+    ws.current.onclose = () => {
+      console.log('WebSocket connection closed');
     };
   }
 
@@ -102,8 +123,8 @@ export default function App() {
     switch (appState) {
       case 'recording':
         return 'Gravando...';
-      case 'sending':
-        return 'Enviando...';
+      case 'processing':
+        return 'Processando...';
       default:
         return 'Pressione para gravar';
     }
@@ -123,7 +144,7 @@ export default function App() {
             pressed && styles.micButtonPressed,
           ]}
           onPress={handleRecordButtonPress}
-          disabled={appState === 'sending'}
+          disabled={appState === 'processing'}
         >
           <FontAwesome
             name="microphone"
