@@ -51,15 +51,17 @@ export default function App() {
     });
 
     ws.current = new WebSocket("wss://lyria-servicodetranscricao.onrender.com/ws");
+    ws.current.binaryType = "blob";
 
     ws.current.onopen = async () => {
       console.log('DIAGNÓSTICO: Conexão WebSocket aberta.');
       try {
-        const audioData = await readAsStringAsync(uri, {
-          encoding: 'base64',
-        });
-        console.log('DIAGNÓSTICO: Áudio lido, enviando...');
-        ws.current.send(audioData);
+        // Busca o arquivo de áudio como um Blob
+        const response = await fetch(uri);
+        const blob = await response.blob();
+
+        console.log('DIAGNÓSTICO: Áudio lido como Blob, enviando...');
+        ws.current.send(blob);
         console.log('DIAGNÓSTICO: Áudio enviado com sucesso.');
       } catch (error) {
         console.error('Falha ao ler ou enviar o arquivo de áudio', error);
@@ -71,13 +73,17 @@ export default function App() {
     ws.current.onmessage = async (e) => {
       console.log('DIAGNÓSTICO: Mensagem recebida do servidor.');
       try {
-        const responseUri = `${cacheDirectory}response-${Date.now()}.mp3`;
-        await writeAsStringAsync(responseUri, e.data, {
-            encoding: 'base64',
-        });
+        const reader = new FileReader();
+        reader.onload = async () => {
+          const base64Data = reader.result.split(',')[1];
+          const responseUri = `${cacheDirectory}response-${Date.now()}.mp3`;
 
-        console.log('DIAGNÓSTICO: Resposta de áudio salva, tocando agora.');
-        const { sound } = await Audio.Sound.createAsync({ uri: responseUri });
+          await writeAsStringAsync(responseUri, base64Data, {
+              encoding: 'base64',
+          });
+
+          console.log('DIAGNÓSTICO: Resposta de áudio salva, tocando agora.');
+          const { sound } = await Audio.Sound.createAsync({ uri: responseUri });
 
         sound.setOnPlaybackStatusUpdate((status) => {
           if (status.isLoaded && status.didJustFinish) {
@@ -88,6 +94,15 @@ export default function App() {
         });
 
         await sound.playAsync();
+        };
+
+        reader.onerror = (error) => {
+          console.error('Falha ao ler o Blob de áudio', error);
+          Alert.alert('Erro', 'Não foi possível processar a resposta de áudio.');
+          setAppState('idle');
+        };
+
+        reader.readAsDataURL(e.data);
 
       } catch (error) {
         console.error('Falha ao processar ou reproduzir a resposta', error);
