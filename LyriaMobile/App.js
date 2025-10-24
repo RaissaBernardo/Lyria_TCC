@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { StyleSheet, View, Pressable, Text, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
+import * as FileSystem from 'expo-file-system';
 
 export default function App() {
   const [recording, setRecording] = useState();
-  const [sound, setSound] = useState();
-  const [appState, setAppState] = useState('idle'); // 'idle' | 'recording' | 'recorded' | 'playing'
-  const [audioUri, setAudioUri] = useState(null);
+  const [appState, setAppState] = useState('idle'); // 'idle' | 'recording' | 'processing'
+  const ws = useRef(null);
 
   /**
    * Solicita permissão do microfone e inicia a gravação de áudio.
@@ -36,111 +36,79 @@ export default function App() {
   }
 
   /**
-   * Para a gravação de áudio e armazena o URI do arquivo.
+   * Para a gravação, envia o áudio via WebSocket e reproduz a resposta.
    */
   async function stopRecording() {
     if (!recording) return;
 
-    setAppState('recorded');
+    setAppState('processing');
     await recording.stopAndUnloadAsync();
     const uri = recording.getURI();
-    setAudioUri(uri);
     setRecording(undefined);
 
-    // FUTURA INTEGRAÇÃO: Descomente a linha abaixo para enviar o áudio para o servidor
-    // sendAudioToServer(uri);
-  }
-
-  /**
-   * Reproduz o som gravado a partir do URI armazenado.
-   */
-  async function playSound() {
-    if (!audioUri) return;
-
-    try {
-      setAppState('playing');
-      const { sound } = await Audio.Sound.createAsync({ uri: audioUri });
-      setSound(sound);
-
-      // Quando a reprodução terminar, volta ao estado 'recorded'
-      sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.isLoaded && status.didJustFinish) {
-          setAppState('recorded');
-          setSound(undefined); // Limpa o som
-        }
-      });
-
-      await sound.playAsync();
-    } catch (error) {
-      console.error("Falha ao reproduzir o som", error);
-      setAppState('recorded'); // Volta ao estado anterior em caso de erro
-    }
-  }
-
-  /**
-   * Para a reprodução do som e descarrega o áudio da memória.
-   */
-  async function stopSound() {
-    if (sound) {
-      await sound.stopAsync();
-      await sound.unloadAsync();
-      setSound(undefined);
-      setAppState('recorded');
-    }
-  }
-
-  /**
-   * Descarta o áudio gravado e redefine o estado do aplicativo para 'idle'.
-   */
-  function discardRecording() {
-    if (sound) {
-      sound.unloadAsync();
-    }
-    setAudioUri(null);
-    setAppState('idle');
-    setSound(undefined);
-    setRecording(undefined);
-  }
-
-  /**
-   * (COMENTADO PARA FUTURA INTEGRAÇÃO)
-   * Envia o áudio gravado para o servidor.
-   * @param {string} uri - O URI local do arquivo de áudio.
-   */
-  /*
-  async function sendAudioToServer(uri) {
-    const formData = new FormData();
-    formData.append('audio', {
-      uri,
-      name: `recording-${Date.now()}.m4a`,
-      type: 'audio/m4a',
+    // Garante que a reprodução de áudio subsequente use o viva-voz no iOS
+    await Audio.setAudioModeAsync({
+      allowsRecordingIOS: false,
     });
-    formData.append('persona', 'professor');
 
-    try {
-      // ** IMPORTANTE: Substitua pelo IP local da sua máquina **
-      const response = await fetch('http://192.168.0.101:5000/Lyria/audio-input', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        body: formData,
-      });
+    // Conectar ao servidor WebSocket
+    ws.current = new WebSocket("wss://lyria-servicodetranscricao.onrender.com/ws");
 
-      const responseData = await response.json();
-
-      if (response.ok) {
-        console.log('Resposta do servidor:', responseData.resposta);
-        Alert.alert('Sucesso', `Texto Transcrito: ${responseData.texto_transcrito}`);
-      } else {
-        Alert.alert('Erro na resposta', responseData.erro || 'Ocorreu um erro.');
+    ws.current.onopen = async () => {
+      try {
+        // Ler o arquivo de áudio como base64
+        const audioData = await FileSystem.readAsStringAsync(uri, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        // Enviar os dados via WebSocket
+        ws.current.send(audioData);
+      } catch (error) {
+        console.error('Falha ao ler ou enviar o arquivo de áudio', error);
+        Alert.alert('Erro', 'Não foi possível enviar o áudio.');
+        setAppState('idle');
       }
-    } catch (error) {
-      console.error('Falha ao enviar o áudio', error);
-      Alert.alert('Erro de conexão', 'Não foi possível se conectar ao servidor.');
-    }
+    };
+
+    ws.current.onmessage = async (e) => {
+      try {
+        // A resposta do servidor deve ser uma string base64 representando o arquivo de áudio.
+        const responseUri = `${FileSystem.cacheDirectory}response-${Date.now()}.mp3`;
+
+        // Escrever a string base64 recebida em um arquivo local.
+        await FileSystem.writeAsStringAsync(responseUri, e.data, {
+            encoding: FileSystem.EncodingType.Base64,
+        });
+
+        // Reproduzir o áudio recebido
+        const { sound } = await Audio.Sound.createAsync({ uri: responseUri });
+
+        sound.setOnPlaybackStatusUpdate((status) => {
+          if (status.isLoaded && status.didJustFinish) {
+            setAppState('idle');
+            sound.unloadAsync();
+            FileSystem.deleteAsync(responseUri); // Opcional: limpar o cache
+          }
+        });
+
+        await sound.playAsync();
+
+      } catch (error) {
+        console.error('Falha ao processar ou reproduzir a resposta', error);
+        Alert.alert('Erro', 'Não foi possível reproduzir a resposta do servidor.');
+        setAppState('idle');
+      }
+    };
+
+    ws.current.onerror = (e) => {
+      console.error('WebSocket Error:', e.message);
+      Alert.alert('Erro de Conexão', 'Não foi possível se conectar ao servidor.');
+      setAppState('idle');
+    };
+
+    ws.current.onclose = () => {
+      console.log('WebSocket connection closed');
+    };
   }
-  */
 
   /**
    * Alterna entre iniciar e parar a gravação.
@@ -160,32 +128,11 @@ export default function App() {
     switch (appState) {
       case 'recording':
         return 'Gravando...';
-      case 'recorded':
-        return 'Gravação concluída';
-      case 'playing':
-        return 'Reproduzindo...';
+      case 'processing':
+        return 'Processando...';
       default:
         return 'Pressione para gravar';
     }
-  }
-
-  /**
-   * Renderiza os controles de reprodução (play/stop, trash) se um áudio foi gravado.
-   */
-  function renderPlaybackControls() {
-    if (appState === 'recorded' || appState === 'playing') {
-      return (
-        <View style={styles.playbackContainer}>
-          <Pressable style={styles.controlButton} onPress={appState === 'playing' ? stopSound : playSound}>
-            <FontAwesome name={appState === 'playing' ? "stop" : "play"} size={30} color="#ffffff" />
-          </Pressable>
-          <Pressable style={styles.controlButton} onPress={discardRecording}>
-            <FontAwesome name="trash" size={30} color="#ffffff" />
-          </Pressable>
-        </View>
-      );
-    }
-    return null;
   }
 
   return (
@@ -202,7 +149,7 @@ export default function App() {
             pressed && styles.micButtonPressed,
           ]}
           onPress={handleRecordButtonPress}
-          disabled={appState === 'recorded' || appState === 'playing'}
+          disabled={appState === 'processing'}
         >
           <FontAwesome
             name="microphone"
@@ -212,7 +159,6 @@ export default function App() {
         </Pressable>
       </View>
       <Text style={styles.statusText}>{getStatusText()}</Text>
-      {renderPlaybackControls()}
     </View>
   );
 }
@@ -268,15 +214,4 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
-  playbackContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '60%',
-    marginTop: 20,
-  },
-  controlButton: {
-    padding: 20,
-    borderRadius: 50,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-  }
 });
