@@ -7,65 +7,45 @@ from testeDaIa import perguntar_ollama, buscar_na_web, get_persona_texto
 from banco.banco import (
     criar_banco, criarUsuario, procurarUsuarioPorEmail,
     pegarHistorico, salvarMensagem, carregar_conversas, carregar_memorias,
-    pegarPersonaEscolhida, escolherApersona
+    pegarPersonaEscolhida, escolherApersona, deleta_conversa, criar_nova_conversa
 )
 from classificadorDaWeb.classificador_busca_web import deve_buscar_na_web
 
 app = Flask(__name__)
+app.secret_key = os.environ.get('SECRET_KEY')
 
-SECRET_KEY = os.environ.get('SECRET_KEY')
-if not SECRET_KEY:
-    raise ValueError("❌ SECRET_KEY não configurada!")
-
-app.secret_key = SECRET_KEY
-
-IS_PRODUCTION = bool(os.environ.get('RENDER'))  
-
-print(f"🔒 Modo: {'PRODUÇÃO' if IS_PRODUCTION else 'DESENVOLVIMENTO'}")
-print(f"🔑 SECRET_KEY configurada: {SECRET_KEY[:10]}...")  
-
+IS_PRODUCTION = os.environ.get('RENDER', False)
 
 app.config.update(
+    SESSION_TYPE='filesystem',  
     SESSION_COOKIE_NAME='lyria_session',
-    SESSION_COOKIE_DOMAIN=None,
-    SESSION_COOKIE_PATH='/',
     SESSION_COOKIE_SAMESITE='None' if IS_PRODUCTION else 'Lax',
-    SESSION_COOKIE_SECURE=IS_PRODUCTION,
     SESSION_COOKIE_HTTPONLY=True,
-    PERMANENT_SESSION_LIFETIME=604800,
-    SESSION_REFRESH_EACH_REQUEST=False
+    SESSION_COOKIE_SECURE=IS_PRODUCTION,
+    SESSION_COOKIE_PATH='/',
+    SESSION_COOKIE_DOMAIN=None,  
+    PERMANENT_SESSION_LIFETIME=604800
 )
 
+Session(app)
 
-def get_allowed_origins():
-    """Retorna lista de origens permitidas baseado no ambiente"""
-    allowed = ["https://lyriafront.onrender.com"]
-    
-    if not IS_PRODUCTION:
-        allowed.extend([
-            "http://localhost:3000",
-            "http://localhost:5173",
-            "http://localhost:5000",
-            "http://127.0.0.1:3000",
-            "http://127.0.0.1:5173",
-            "http://127.0.0.1:5000"
-        ])
-    
-    print(f"🌐 Origens permitidas: {allowed}")
-    return allowed
+allowed_origins = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://10.110.12.20:5173"
+]
 
+if IS_PRODUCTION:
+    allowed_origins.append("https://lyriafront.onrender.com")
 
-CORS(app,
-    supports_credentials=True,
-    resources={
-        r"/*": {
-            "origins": get_allowed_origins(),  
-            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-            "allow_headers": ["Content-Type", "Authorization", "Cookie"],
-            "expose_headers": ["Set-Cookie"],
-            "max_age": 3600
-        }
-    }
+CORS(app, 
+    resources={r"/*": {
+        "origins": allowed_origins,
+        "allow_headers": ["Content-Type", "Authorization"],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "supports_credentials": True,
+        "expose_headers": ["Set-Cookie"]
+    }}
 )
 
 try:
@@ -74,9 +54,7 @@ try:
 except Exception as e:
     print(f"❌ Erro ao criar tabelas: {e}")
 
-
 def verificar_login():
-    """Retorna o email do usuário logado ou None."""
     email = session.get('usuario_email')
     if email:
         print(f"✅ Usuário autenticado: {email}")
@@ -87,10 +65,8 @@ def verificar_login():
 def validar_persona(persona):
     return persona in ['professor', 'empresarial', 'social']
 
-
 @app.route('/Lyria/login', methods=['POST'])
 def login():
-    print(f"🔐 Tentativa de login:")
     print(f"   Origin: {request.headers.get('Origin')}")
     print(f"   Cookies recebidos: {dict(request.cookies)}")
     
@@ -138,13 +114,26 @@ def login():
         print(traceback.format_exc())
         return jsonify({"status": "erro", "mensagem": str(e)}), 500
 
+@app.route('/Lyria/conversas', methods=['POST'])
+def criar_nova_conversa_route():
+    usuario = verificar_login()
+    if not usuario:
+        return jsonify({"erro": "Usuário não está logado"}), 401
+    
+    try:
+        from banco.banco import criar_nova_conversa
+        conversa_id = criar_nova_conversa(usuario)
+        return jsonify({"conversa_id": conversa_id, "sucesso": "Nova conversa criada"}), 201
+    except Exception as e:
+        print(f"❌ Erro ao criar nova conversa: {e}")
+        return jsonify({"erro": str(e)}), 500
+
 @app.route('/Lyria/logout', methods=['POST'])
 def logout():
     email = session.get('usuario_email')
     session.clear()
     print(f"✅ Logout realizado: {email}")
     return jsonify({"status": "ok", "mensagem": "Logout realizado com sucesso"}), 200
-
 
 @app.route('/Lyria/conversar', methods=['POST'])
 def conversar_sem_conta():
@@ -163,7 +152,6 @@ def conversar_sem_conta():
         print(f"❌ Erro em conversar_sem_conta: {e}")
         return jsonify({"erro": str(e)}), 500
 
-
 @app.route('/Lyria/conversar-logado', methods=['POST'])
 def conversar_logado():
     print(f"📋 Sessão recebida: {dict(session)}")
@@ -176,6 +164,8 @@ def conversar_logado():
 
     data = request.get_json() or {}
     pergunta = data.get('pergunta')
+    conversa_id = data.get('conversa_id')  
+    
     if not pergunta:
         return jsonify({"erro": "Campo 'pergunta' é obrigatório"}), 400
 
@@ -200,15 +190,14 @@ def conversar_logado():
         print(f"✅ Persona texto obtido: {persona_texto[:50]}..." if persona_texto else "❌ Persona texto vazio")
 
         resposta = perguntar_ollama(pergunta, conversas, memorias, persona_texto, contexto_web)
-        salvarMensagem(usuario, pergunta, resposta, modelo_usado="hf", tokens=None)
+        conversa_id_retornado = salvarMensagem(usuario, pergunta, resposta, modelo_usado="hf", tokens=None, conversa_id=conversa_id)
 
-        return jsonify({"resposta": resposta})
+        return jsonify({"resposta": resposta, "conversa_id": conversa_id_retornado})  # ✅ Retorna o ID da conversa
     except Exception as e:
         print(f"❌ Erro detalhado em conversar_logado: {str(e)}")
         import traceback
         print(f"❌ Traceback completo:\n{traceback.format_exc()}")
         return jsonify({"erro": str(e)}), 500
-    
     
 @app.route('/Lyria/conversas', methods=['GET'])
 def get_conversas_logado():
@@ -223,7 +212,19 @@ def get_conversas_logado():
     except Exception as e:
         print(f"❌ Erro em get_conversas_logado: {e}")
         return jsonify({"erro": str(e)}), 500
-
+    
+@app.route('/Lyria/conversas/<id>', methods=['DELETE'])
+def remove_conversa_id(id):
+    usuario = verificar_login()
+    if not usuario:
+        return jsonify({"erro": "Usuário não está logado"}), 401
+    
+    try:
+        deletou = deleta_conversa(id)
+        return jsonify({"sucesso": "Deletado com sucesso!"})
+    except Exception as e:
+        print(f"Erro em deletar a conversa")
+        return jsonify({"erro": str(e)}), 500
 
 @app.route('/Lyria/historico', methods=['GET'])
 def get_historico_logado():
@@ -238,7 +239,6 @@ def get_historico_logado():
     except Exception as e:
         print(f"❌ Erro em get_historico_logado: {e}")
         return jsonify({"erro": str(e)}), 500
-
 
 @app.route('/Lyria/PersonaEscolhida', methods=['GET'])
 def get_persona_logado():
@@ -277,7 +277,6 @@ def atualizar_persona_logado():
         print(f"❌ Erro em atualizar_persona_logado: {e}")
         return jsonify({"erro": str(e)}), 500
 
-
 @app.route('/Lyria/usuarios', methods=['POST'])
 def criar_usuario_route():
     data = request.get_json() or {}
@@ -313,7 +312,6 @@ def get_usuario(usuarioEmail):
         print(f"❌ Erro em get_usuario: {e}")
         return jsonify({"erro": str(e)}), 500
 
-
 @app.route('/Lyria/personas', methods=['GET'])
 def listar_personas():
     try:
@@ -326,7 +324,6 @@ def listar_personas():
     except Exception as e:
         print(f"❌ Erro em /Lyria/personas: {e}")
         return jsonify({"erro": str(e)}), 500
-
 
 @app.route('/Lyria/check-session', methods=['GET'])
 def check_session():
@@ -352,5 +349,4 @@ def check_session():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     print(f"🚀 Servidor iniciando na porta {port}")
-    print(f"🌐 Origens CORS permitidas: {get_allowed_origins()}")
     serve(app, host="0.0.0.0", port=port)
