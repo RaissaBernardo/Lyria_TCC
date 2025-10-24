@@ -57,7 +57,7 @@ export default function App() {
     ws.current.onopen = async () => {
       try {
         const audioData = await FileSystem.readAsStringAsync(uri, {
-          encoding: FileSystem.EncodingType.Base64,
+          encoding: 'base64',
         });
         ws.current.send(audioData);
 

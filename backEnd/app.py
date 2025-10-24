@@ -1,4 +1,3 @@
-import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from testeDaIa import perguntar_ollama, buscar_na_web, get_persona_texto
