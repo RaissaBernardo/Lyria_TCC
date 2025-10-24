@@ -3,7 +3,7 @@ import { StyleSheet, View, Pressable, Text, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
-import * as FileSystem from 'expo-file-system';
+import { readAsStringAsync } from 'expo-file-system/legacy';
 
 export default function App() {
   const [recording, setRecording] = useState();
@@ -56,7 +56,7 @@ export default function App() {
 
     ws.current.onopen = async () => {
       try {
-        const audioData = await FileSystem.readAsStringAsync(uri, {
+        const audioData = await readAsStringAsync(uri, {
           encoding: 'base64',
         });
         ws.current.send(audioData);
