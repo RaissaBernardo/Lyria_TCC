@@ -53,21 +53,14 @@ export default function App() {
     ws.current = new WebSocket("wss://lyria-servicodetranscricao.onrender.com/ws");
 
     ws.current.onopen = async () => {
-      console.log('DIAGNÓSTICO: Conexão aberta. Lendo e enviando áudio em pedaços...');
+      console.log('DIAGNÓSTICO: Conexão WebSocket aberta.');
       try {
         const audioData = await readAsStringAsync(uri, {
           encoding: 'base64',
         });
-
-        const chunkSize = 16384; // 16 KB
-        for (let i = 0; i < audioData.length; i += chunkSize) {
-          const chunk = audioData.substring(i, i + chunkSize);
-          ws.current.send(chunk);
-        }
-
-        ws.current.send("EOM"); // End of Message
-        console.log('DIAGNÓSTICO: Todos os pedaços enviados.');
-
+        console.log('DIAGNÓSTICO: Áudio lido, enviando...');
+        ws.current.send(audioData);
+        console.log('DIAGNÓSTICO: Áudio enviado com sucesso.');
       } catch (error) {
         console.error('Falha ao ler ou enviar o arquivo de áudio', error);
         Alert.alert('Erro', 'Não foi possível enviar o áudio.');
