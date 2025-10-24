@@ -20,7 +20,6 @@ import {
   ResultReason,
 } from "microsoft-cognitiveservices-speech-sdk";
 import LoginPrompt from "../../components/LoginPrompt";
-import ConfirmationModal from "../../components/ConfirmationModal";
 import HistoryPanel from "../../components/HistoryPanel";
 import ChatHeader from "../../components/ChatHeader";
 import MessageList from "../../components/MessageList";
@@ -57,8 +56,6 @@ function ChatContent() {
   const [selectedVoice, setSelectedVoice] = useState(availableVoices[0].value);
   const [chatBodyAnimationClass, setChatBodyAnimationClass] = useState("fade-in");
   const [isLoginPromptVisible, setLoginPromptVisible] = useState(false);
-  const [isDeleteModalVisible, setDeleteModalVisible] = useState(false);
-  const [chatToDelete, setChatToDelete] = useState(null);
   const [personas, setPersonas] = useState({});
   const [selectedPersona, setSelectedPersona] = useState("professor");
 
@@ -95,7 +92,6 @@ function ChatContent() {
       const response = await getConversations();
       const conversationsWithIds = (response.conversas || []).map((convo, index) => ({
         ...convo,
-        id: index,
         titulo: (convo.pergunta || "Nova conversa").substring(0, 40) + "...",
       }));
       console.log("Conversas carregadas:", conversationsWithIds);
@@ -223,14 +219,25 @@ function ChatContent() {
     setHistoryVisible(false);
   };
 
-  const deleteChat = (id) => {
-    addToast("Função indisponível. Requer ajuste no backend.", "warning");
-    console.warn(`Tentativa de deletar conversa ID ${id}. A API ainda não suporta esta ação.`);
-  };
+  const deleteChat = async (id) => {
+    console.log(`Tentando deletar conversa com o id ${id}`);
+    try {
+      const response = await deleteConversation(id);
 
-  const handleConfirmDelete = async () => {
-    // Desativado até ajuste de API
-  };
+      if (response.sucesso) {
+        setConversations((prev) => prev.filter((convo) => convo.id !== id));
+        addToast(`Conversa com o id ${id} deletada com sucesso!`, 'success');
+
+        if (currentChatId === id) {
+          startNewChat();
+        }
+      } else {
+        addToast(response.erro || `Falha ao excluir conversa com o id ${id}`, 'error');
+      }
+    } catch (error) {
+      addToast(error.message || `Ocorreu um erro ao excluir a conversa com o id ${id}`, 'error');
+    }
+  }
 
   const handleHistoryClick = () => {
     if (!isAuthenticated) setLoginPromptVisible(true);
@@ -266,13 +273,7 @@ function ChatContent() {
       {isLoginPromptVisible && (
         <LoginPrompt onDismiss={() => setLoginPromptVisible(false)} showContinueAsGuest={false} />
       )}
-      <ConfirmationModal
-        isOpen={isDeleteModalVisible}
-        onClose={() => setDeleteModalVisible(false)}
-        onConfirm={handleConfirmDelete}
-        title="Confirmar Exclusão"
-        message="Você tem certeza que deseja apagar esta conversa? Esta ação não pode ser desfeita."
-      />
+     
       <HistoryPanel
         isVisible={isHistoryVisible}
         onClose={() => setHistoryVisible(false)}

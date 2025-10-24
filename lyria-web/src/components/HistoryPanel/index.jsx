@@ -13,10 +13,10 @@ const HistoryPanel = ({
   const [conversationToDeleteId, setConversationToDeleteId] = useState(null);
 
   const handleDeleteClick = (chatId) => {
+    console.log(`Id para o handle delete click: ${chatId}`)
     setConversationToDeleteId(chatId);
     setIsModalOpen(true);
   };
-
 
   const handleConfirmDelete = () => {
     if (conversationToDeleteId) {
