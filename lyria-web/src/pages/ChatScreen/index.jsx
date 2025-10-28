@@ -153,6 +153,7 @@ function ChatContent() {
   const [isHistoryVisible, setHistoryVisible] = useState(false);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
+  const synthesizerRef = useRef(null);
   const requestCancellationRef = useRef({ cancel: () => {} });
 
   const [conversations, setConversations] = useState([]);
@@ -212,14 +213,25 @@ function ChatContent() {
 
   const speakResponse = (text) => {
     if (!isSpeechEnabled) return;
+
+    if (synthesizerRef.current) {
+      synthesizerRef.current.close();
+    }
+
     const plainText = stripMarkdown(text);
     const synthesizer = new SpeechSynthesizer(speechConfig);
+    synthesizerRef.current = synthesizer;
+
     synthesizer.speakTextAsync(
       plainText,
-      () => synthesizer.close(),
+      () => {
+        synthesizer.close();
+        synthesizerRef.current = null;
+      },
       (error) => {
         console.error("Erro na síntese de voz:", error);
         synthesizer.close();
+        synthesizerRef.current = null;
       }
     );
   };
