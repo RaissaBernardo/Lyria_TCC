@@ -34,7 +34,6 @@ function Header() {
           <a href="#contato" onClick={(e) => handleScrollTo(e, 'contato')}>
             Contato
           </a>
-
           {isAuthenticated ? (
             <div className="user-profile-section">
               <div
