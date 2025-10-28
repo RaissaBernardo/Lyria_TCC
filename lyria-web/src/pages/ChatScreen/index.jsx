@@ -149,7 +149,6 @@ function ChatContent() {
   const [input, setInput] = useState("");
   const [isBotTyping, setIsBotTyping] = useState(false);
   const [lastUserMessage, setLastUserMessage] = useState("");
-  const [lastBotMessage, setLastBotMessage] = useState("");
   const [copiedId, setCopiedId] = useState(null);
   const [isHistoryVisible, setHistoryVisible] = useState(false);
   const messagesEndRef = useRef(null);
@@ -295,7 +294,6 @@ function ChatContent() {
         animate: true,
       };
       setMessages((prev) => [...prev, botMessage]);
-      setLastBotMessage(response.resposta);
       speakResponse(response.resposta);
     } catch (error) {
       if (error.name === 'AbortError') {
@@ -525,7 +523,7 @@ function ChatContent() {
                       </button>
                       <button
                         className="action-btn"
-                        onClick={() => speakResponse(lastBotMessage)}
+                        onClick={() => speakResponse(msg.text)}
                         title="Repetir"
                       >
                         <FiRefreshCw />
