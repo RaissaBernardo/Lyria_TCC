@@ -12,6 +12,16 @@ export const conversarAnonimo = async (pergunta, signal) => {
   }
 };
 
+export const solicitar_redefinicao_senha = async (email) => {
+  try {
+    const response = await api.post("/Lyria/solicitar-redefinicao-senha", { email });
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao solicitar redefinição de senha:", error);
+    throw error;
+  }
+};
+
 export const getUserProfile = async (userId) => {
   try {
     const response = await api.get(`/Lyria/profile/${userId}`);

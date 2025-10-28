@@ -31,6 +31,9 @@ function Header() {
             Sobre
           </a>
           <Link to="/chat">Chat</Link>
+          <a href="#contato" onClick={(e) => handleScrollTo(e, 'contato')}>
+            Contato
+          </a>
 
           {isAuthenticated ? (
             <div className="user-profile-section">

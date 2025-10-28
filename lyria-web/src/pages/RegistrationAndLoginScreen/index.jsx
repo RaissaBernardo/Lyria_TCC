@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { register } from "../../services/LyriaApi";
+import { register, solicitar_redefinicao_senha } from "../../services/LyriaApi";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import "./Styles/styles.css";
@@ -23,6 +23,24 @@ function LoginRegisterPage() {
 
   // Loading state
   const [loading, setLoading] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+
+  const handleForgotPassword = async () => {
+    setLoading(true);
+    try {
+      const response = await solicitar_redefinicao_senha(email);
+      if (response.sucesso) {
+        addToast("Um e-mail de redefinição de senha foi enviado para o seu e-mail.", "success");
+        setIsForgotPassword(false);
+      } else {
+        addToast(response.erro || "Erro ao solicitar redefinição de senha.", "error");
+      }
+    } catch (err) {
+      addToast(err.response?.data?.erro || "Erro de conexão. Tente novamente.", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const toggleForm = () => {
     setAnimationClass("fade-out");
@@ -83,82 +101,118 @@ function LoginRegisterPage() {
   return (
     <div className="auth-body">
       <div className={`form-container ${isLogin ? "login-active" : "register-active"}`}>
-        <div className={`form-content ${animationClass}`}>
-          <h2 className="form-title">{isLogin ? "Bem-vindo de Volta" : "Crie sua Conta"}</h2>
-          <p className="form-subtitle">
-            {isLogin
-              ? "Entre para continuar sua jornada cósmica."
-              : "Junte-se a nós e explore o universo LyrIA."}
-          </p>
+        {isForgotPassword ? (
+          <div className={`form-content ${animationClass}`}>
+            <h2 className="form-title">Redefinir Senha</h2>
+            <p className="form-subtitle">
+              Digite seu e-mail para receber um link de redefinição de senha.
+            </p>
 
-          <form onSubmit={handleAuth}>
-            {!isLogin && (
+            <form onSubmit={(e) => { e.preventDefault(); handleForgotPassword(); }}>
               <div className="input-group">
                 <input
-                  type="text"
-                  placeholder="Nome"
+                  type="email"
+                  placeholder="Email"
                   required
-                  value={nome}
-                  onChange={(e) => setNome(e.target.value)}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
-            )}
-            <div className="input-group">
-              <input
-                type="email"
-                placeholder="Email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div className="input-group">
-              <input
-                type={passwordVisible ? "text" : "password"}
-                placeholder="Senha"
-                required
-                value={senha}
-                onChange={(e) => setSenha(e.target.value)}
-              />
-              <span
-                className="password-toggle-icon"
-                onClick={() => setPasswordVisible(!passwordVisible)}
-              >
-                {passwordVisible ? <FaEyeSlash /> : <FaEye />}
-              </span>
-            </div>
-            {!isLogin && (
+
+              <button type="submit" className="submit-btn" disabled={loading}>
+                {loading ? "ENVIANDO..." : "ENVIAR"}
+              </button>
+            </form>
+
+            <p className="toggle-form-text">
+              Lembrou sua senha?{" "}
+              <span onClick={() => setIsForgotPassword(false)}>Faça Login</span>
+            </p>
+          </div>
+        ) : (
+          <div className={`form-content ${animationClass}`}>
+            <h2 className="form-title">{isLogin ? "Bem-vindo de Volta" : "Crie sua Conta"}</h2>
+            <p className="form-subtitle">
+              {isLogin
+                ? "Entre para continuar sua jornada cósmica."
+                : "Junte-se a nós e explore o universo LyrIA."}
+            </p>
+
+            <form onSubmit={handleAuth}>
+              {!isLogin && (
+                <div className="input-group">
+                  <input
+                    type="text"
+                    placeholder="Nome"
+                    required
+                    value={nome}
+                    onChange={(e) => setNome(e.target.value)}
+                  />
+                </div>
+              )}
               <div className="input-group">
                 <input
-                  type={confirmPasswordVisible ? "text" : "password"}
-                  placeholder="Confirmar Senha"
+                  type="email"
+                  placeholder="Email"
                   required
-                  value={confirmarSenha}
-                  onChange={(e) => setConfirmarSenha(e.target.value)}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
-                 <span
-                className="password-toggle-icon"
-                onClick={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
-              >
-                {confirmPasswordVisible ? <FaEyeSlash /> : <FaEye />}
-              </span>
               </div>
-            )}
+              <div className="input-group">
+                <input
+                  type={passwordVisible ? "text" : "password"}
+                  placeholder="Senha"
+                  required
+                  value={senha}
+                  onChange={(e) => setSenha(e.target.value)}
+                />
+                <span
+                  className="password-toggle-icon"
+                  onClick={() => setPasswordVisible(!passwordVisible)}
+                >
+                  {passwordVisible ? <FaEyeSlash /> : <FaEye />}
+                </span>
+              </div>
+              {!isLogin && (
+                <div className="input-group">
+                  <input
+                    type={confirmPasswordVisible ? "text" : "password"}
+                    placeholder="Confirmar Senha"
+                    required
+                    value={confirmarSenha}
+                    onChange={(e) => setConfirmarSenha(e.target.value)}
+                  />
+                   <span
+                  className="password-toggle-icon"
+                  onClick={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
+                >
+                  {confirmPasswordVisible ? <FaEyeSlash /> : <FaEye />}
+                </span>
+                </div>
+              )}
 
-            {isLogin && (
-                <a href="#" className="forgot-password">Esqueceu sua senha?</a>
-            )}
+              {isLogin && (
+                <button
+                  type="button"
+                  className="forgot-password"
+                  onClick={() => setIsForgotPassword(true)}
+                >
+                  Esqueceu sua senha?
+                </button>
+              )}
 
-            <button type="submit" className="submit-btn" disabled={loading}>
-              {loading ? "CARREGANDO..." : (isLogin ? "ENTRAR" : "CADASTRAR")}
-            </button>
-          </form>
+              <button type="submit" className="submit-btn" disabled={loading}>
+                {loading ? "CARREGANDO..." : (isLogin ? "ENTRAR" : "CADASTRAR")}
+              </button>
+            </form>
 
-          <p className="toggle-form-text">
-            {isLogin ? "Não tem uma conta?" : "Já possui uma conta?"}{" "}
-            <span onClick={toggleForm}>{isLogin ? "Cadastre-se" : "Faça Login"}</span>
-          </p>
-        </div>
+            <p className="toggle-form-text">
+              {isLogin ? "Não tem uma conta?" : "Já possui uma conta?"}{" "}
+              <span onClick={toggleForm}>{isLogin ? "Cadastre-se" : "Faça Login"}</span>
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -11,6 +11,7 @@ import {
   FiClock,
   FiX,
   FiTrash2,
+  FiRefreshCw,
 } from "react-icons/fi";
 import { FaVolumeUp, FaVolumeMute } from "react-icons/fa";
 import { RiRobot2Line } from "react-icons/ri";
@@ -147,6 +148,7 @@ function ChatContent() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isBotTyping, setIsBotTyping] = useState(false);
+  const [lastUserMessage, setLastUserMessage] = useState("");
   const [copiedId, setCopiedId] = useState(null);
   const [isHistoryVisible, setHistoryVisible] = useState(false);
   const messagesEndRef = useRef(null);
@@ -239,6 +241,7 @@ function ChatContent() {
       text: trimmedInput,
     };
     setMessages((prev) => [...prev, userMessage]);
+    setLastUserMessage(trimmedInput);
     setInput("");
     setIsBotTyping(true);
 
@@ -492,18 +495,28 @@ function ChatContent() {
                     animate={msg.animate}
                   />
                   {msg.sender === "bot" && (
-                    <button
-                      className="copy-btn"
-                      onClick={() =>
-                        handleCopyToClipboard(msg.text, msg.id || index)
-                      }
-                    >
-                      {copiedId === (msg.id || index) ? (
-                        <FiCheck />
-                      ) : (
-                        <FiCopy />
-                      )}
-                    </button>
+                    <div className="message-actions">
+                      <button
+                        className="action-btn"
+                        onClick={() =>
+                          handleCopyToClipboard(msg.text, msg.id || index)
+                        }
+                        title="Copiar"
+                      >
+                        {copiedId === (msg.id || index) ? (
+                          <FiCheck />
+                        ) : (
+                          <FiCopy />
+                        )}
+                      </button>
+                      <button
+                        className="action-btn"
+                        onClick={() => handleSend(lastUserMessage)}
+                        title="Repetir"
+                      >
+                        <FiRefreshCw />
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
