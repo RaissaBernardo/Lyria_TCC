@@ -13,6 +13,13 @@ export const conversarAnonimo = async (pergunta, persona, signal) => {
   }
 };
 
+export const esqueciMinhaSenha = async (data) => {
+  console.log("API: Chamando esqueciMinhaSenha (simulado)", data);
+  // TODO: Implementar a chamada de API real para o endpoint de redefinição de senha.
+  // A implementação atual é um mock para fins de desenvolvimento do frontend.
+  return Promise.resolve({ status: "ok" });
+};
+
 export const postMessage = async (pergunta, conversa_id, signal) => {
   console.log("API: Chamando postMessage", { pergunta, conversa_id });
   try {

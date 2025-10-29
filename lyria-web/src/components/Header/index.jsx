@@ -41,49 +41,49 @@ function Header({
       </Link>
 
       <nav className="main-nav">
-        {isAuthenticated ? (
-          <div className="user-profile-section" ref={dropdownRef}>
-            <div
-              className="user-indicator"
-              onClick={handleUserClick}
-            >
-              {user?.foto_perfil_url ? (
-                <img
-                  src={`${baseURL}${user.foto_perfil_url}`}
-                  alt="Foto de perfil"
-                  className="user-profile-pic"
-                />
-              ) : (
-                user?.nome?.charAt(0).toUpperCase()
+        <div className="nav-actions">
+          {isAuthenticated ? (
+            <div className="user-profile-section" ref={dropdownRef}>
+              <div
+                className="user-indicator"
+                onClick={handleUserClick}
+              >
+                {user?.foto_perfil_url ? (
+                  <img
+                    src={`${baseURL}${user.foto_perfil_url}`}
+                    alt="Foto de perfil"
+                    className="user-profile-pic"
+                  />
+                ) : (
+                  user?.nome?.charAt(0).toUpperCase()
+                )}
+              </div>
+
+              {dropdownVisible && (
+                <div className="user-dropdown-initial">
+                  <button onClick={handleLogoutClick}>Sair</button>
+                </div>
               )}
             </div>
-
-            {dropdownVisible && (
-              <div className="user-dropdown-initial">
-                <button onClick={handleLogoutClick}>Sair</button>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="nav-actions">
-            <Link 
-              to={'/RegistrationAndLogin'} 
+          ) : (
+            <Link
+              to={'/RegistrationAndLogin'}
               className="nav-button"
               onClick={() => console.log('[Header] Navegando para login')}
             >
               Entrar
             </Link>
-            <button 
-              onClick={() => {
-                console.log('[Header] Abrindo modal de contato');
-                toggleContactModal();
-              }} 
-              className="nav-button"
-            >
-              Contato
-            </button>
-          </div>
-        )}
+          )}
+          <button
+            onClick={() => {
+              console.log('[Header] Abrindo modal de contato');
+              toggleContactModal();
+            }}
+            className="nav-button"
+          >
+            Contato
+          </button>
+        </div>
       </nav>
     </header>
   );

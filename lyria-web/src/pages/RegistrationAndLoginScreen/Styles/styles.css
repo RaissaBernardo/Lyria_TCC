@@ -107,6 +107,12 @@
     color: var(--color-light-purple);
     text-decoration: none;
     transition: color 0.3s ease;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    width: auto;
+    float: right; /* Alinha o botão à direita */
 }
 
 .forgot-password:hover { color: white; text-decoration: underline; }
