@@ -41,8 +41,31 @@ function Header({
       </Link>
 
       <nav className="main-nav">
-        {!isAuthenticated && (
-          <div className="nav-actions">
+        <div className="nav-actions">
+          {isAuthenticated ? (
+            <div className="user-profile-section" ref={dropdownRef}>
+              <div
+                className="user-indicator"
+                onClick={handleUserClick}
+              >
+                {user?.foto_perfil_url ? (
+                  <img
+                    src={`${baseURL}${user.foto_perfil_url}`}
+                    alt="Foto de perfil"
+                    className="user-profile-pic"
+                  />
+                ) : (
+                  user?.nome?.charAt(0).toUpperCase()
+                )}
+              </div>
+
+              {dropdownVisible && (
+                <div className="user-dropdown-initial">
+                  <button onClick={handleLogoutClick}>Sair</button>
+                </div>
+              )}
+            </div>
+          ) : (
             <Link
               to={'/RegistrationAndLogin'}
               className="nav-button"
@@ -50,41 +73,17 @@ function Header({
             >
               Entrar
             </Link>
-            <button
-              onClick={() => {
-                console.log('[Header] Abrindo modal de contato');
-                toggleContactModal();
-              }}
-              className="nav-button"
-            >
-              Contato
-            </button>
-          </div>
-        )}
-        {isAuthenticated && (
-          <div className="user-profile-section" ref={dropdownRef}>
-            <div
-              className="user-indicator"
-              onClick={handleUserClick}
-            >
-              {user?.foto_perfil_url ? (
-                <img
-                  src={`${baseURL}${user.foto_perfil_url}`}
-                  alt="Foto de perfil"
-                  className="user-profile-pic"
-                />
-              ) : (
-                user?.nome?.charAt(0).toUpperCase()
-              )}
-            </div>
-
-            {dropdownVisible && (
-              <div className="user-dropdown-initial">
-                <button onClick={handleLogoutClick}>Sair</button>
-              </div>
-            )}
-          </div>
-        )}
+          )}
+          <button
+            onClick={() => {
+              console.log('[Header] Abrindo modal de contato');
+              toggleContactModal();
+            }}
+            className="nav-button"
+          >
+            Contato
+          </button>
+        </div>
       </nav>
     </header>
   );

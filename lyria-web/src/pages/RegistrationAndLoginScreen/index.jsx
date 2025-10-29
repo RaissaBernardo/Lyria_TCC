@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { register, getPersonas, esqueciMinhaSenha } from "../../services/LyriaApi";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
+import ForgotPasswordModal from "../../components/ForgotPasswordModal";
 import "./Styles/styles.css";
 
 import {
@@ -60,6 +61,7 @@ function LoginRegisterPage() {
   const [animationClass, setAnimationClass] = useState("fade-in");
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
+  const [isForgotPasswordModalOpen, setForgotPasswordModalOpen] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
   const { addToast } = useToast();
@@ -140,28 +142,8 @@ function LoginRegisterPage() {
     }
   };
 
-  const handleForgotPassword = async () => {
-    if (!email) {
-      addToast("Por favor, digite seu e-mail para redefinir a senha.", "error");
-      return;
-    }
-    setLoading(true);
-    try {
-      // Simulação de chamada de API
-      const response = await esqueciMinhaSenha({ email });
-      if (response.status === "ok") {
-        addToast("Se um usuário com este e-mail existir, um link de redefinição de senha será enviado.", "success");
-      } else {
-        addToast(response.erro || "Ocorreu um erro. Tente novamente.", "error");
-      }
-    } catch (err) {
-      addToast(
-        err.response?.data?.erro || "Erro de conexão. Tente novamente.",
-        "error"
-      );
-    } finally {
-      setLoading(false);
-    }
+  const handleForgotPassword = () => {
+    setForgotPasswordModalOpen(true);
   };
 
   const handleRegister = async () => {
@@ -402,6 +384,10 @@ function LoginRegisterPage() {
 
   return (
     <div className="auth-body">
+      <ForgotPasswordModal
+        isOpen={isForgotPasswordModalOpen}
+        onClose={() => setForgotPasswordModalOpen(false)}
+      />
       <div
         className={`form-container ${
           isLogin ? "login-active" : "register-active"
