@@ -1,57 +1,92 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import './Styles/styles.css';
+import { Link } from 'react-router-dom';
+import { baseURL } from '../../services/api';
+import logoImage from '../../../public/img/LogoBranca.png';
 
-function Header() {
-  const { isAuthenticated, logout, user } = useAuth();
-  const navigate = useNavigate();
-  const [dropdownVisible, setDropdownVisible] = useState(false);
+function Header({ 
+  isAuthenticated, 
+  user, 
+  dropdownVisible, 
+  setDropdownVisible, 
+  handleLogout,
+  toggleContactModal 
+}) {
+  
+  console.log('[Header] Renderizando componente', {
+    isAuthenticated,
+    userName: user?.nome,
+    dropdownVisible
+  });
 
-  const handleScrollTo = (event, targetId) => {
-    event.preventDefault();
-    const targetElement = document.getElementById(targetId);
-    if (targetElement) {
-      targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+  const handleUserClick = () => {
+    console.log('[Header] Toggle dropdown clicado');
+    setDropdownVisible(!dropdownVisible);
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/RegistrationAndLogin'); // Redireciona após o logout
+  const handleLogoutClick = () => {
+    console.log('[Header] Logout clicado');
+    handleLogout();
   };
 
   return (
-    <header className="main-header">
-      <div className="header-container">
-        <h1 className="logo">LYRIA</h1>
-        <nav className="main-nav">
-          <Link to="/">Página Inicial</Link>
-          <a href="#nossa-historia" onClick={(e) => handleScrollTo(e, 'nossa-historia')}>
-            Sobre
-          </a>
-          <Link to="/chat">Chat</Link>
+    <header className="app-header">
+      <Link to={'/'} className="logo-link">
+        <div className="logo">
+          <img src={logoImage} alt="Logo da LyrIA" className="logo-image" />
+        </div>
+      </Link>
 
-          {isAuthenticated ? (
-            <div className="user-profile-section">
-              <div
-                className="user-indicator"
-                onClick={() => setDropdownVisible(!dropdownVisible)}
-              >
-                {/* Pega a primeira letra do nome do usuário para a bolinha */}
-                {user?.nome?.charAt(0).toUpperCase()}
-              </div>
-              {dropdownVisible && (
-                <div className="user-dropdown">
-                  <button onClick={handleLogout}>Sair</button>
-                </div>
+      <nav className="main-nav">
+        {isAuthenticated ? (
+          <div className="user-profile-section">
+            <div
+              className="user-indicator"
+              onClick={handleUserClick}
+            >
+              {user?.foto_perfil_url ? (
+                <img
+                  src={`${baseURL}${user.foto_perfil_url}`}
+                  alt="Foto de perfil"
+                  className="user-profile-pic"
+                />
+              ) : (
+                user?.nome?.charAt(0).toUpperCase()
               )}
             </div>
-          ) : (
-            <Link to="/RegistrationAndLogin">Entrar</Link>
-          )}
-        </nav>
-      </div>
+
+            {dropdownVisible && (
+              <div className="user-dropdown-initial">
+                <Link 
+                  to="/profile" 
+                  className="dropdown-link"
+                  onClick={() => console.log('[Header] Navegando para perfil')}
+                >
+                  Ver Perfil
+                </Link>
+                <button onClick={handleLogoutClick}>Sair</button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="nav-actions">
+            <Link 
+              to={'/RegistrationAndLogin'} 
+              className="nav-button"
+              onClick={() => console.log('[Header] Navegando para login')}
+            >
+              Entrar
+            </Link>
+            <button 
+              onClick={() => {
+                console.log('[Header] Abrindo modal de contato');
+                toggleContactModal();
+              }} 
+              className="nav-button"
+            >
+              Contato
+            </button>
+          </div>
+        )}
+      </nav>
     </header>
   );
 }
