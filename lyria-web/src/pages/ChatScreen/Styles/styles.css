@@ -70,11 +70,19 @@
   transform: scale(1.05);
 }
 
-.galaxy-chat-header h1 {
-  font-size: 1.5rem;
-  font-weight: 500;
-  letter-spacing: 3px;
-  text-transform: uppercase;
+.header-logo {
+  height: 40px; /* Ajuste a altura conforme necessário */
+}
+
+.header-group-left, .header-group-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1; /* Ocupa espaço igualmente */
+}
+
+.header-group-right {
+  justify-content: flex-end; /* Alinha ícones à direita */
 }
 
 .header-icon-btn {
@@ -376,16 +384,31 @@
   justify-content: center;
 }
 .lyria-icon-large {
-  font-size: 4rem;
-  color: #c9b6f2;
-  background: rgba(68, 47, 115, 0.7);
-  border-radius: 50%;
-  width: 80px;
-  height: 80px;
+  width: 120px;
+  height: 120px;
+  margin-bottom: 1rem;
+  font-size: 120px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 1.5rem;
+}
+
+.lyria-icon-large img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.back-to-home-link {
+  color: #c9b6f2;
+  text-decoration: none;
+  margin-bottom: 2rem;
+  font-size: 0.9rem;
+  transition: color 0.2s;
+}
+
+.back-to-home-link:hover {
+  color: #fff;
 }
 .suggestions-container h2 {
   font-weight: 500;

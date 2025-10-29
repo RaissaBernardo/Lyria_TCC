@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid'; 
 
 if (typeof crypto?.randomUUID !== 'function') {
@@ -21,15 +21,19 @@ export const useToast = () => {
 export const ToastProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
 
+  const removeToast = useCallback((id) => {
+    setToasts(prevToasts => prevToasts.filter(toast => toast.id !== id));
+  }, []);
+
   const addToast = useCallback((message, type = 'info', duration = 10000) => {
 
     let id;
     if (typeof crypto?.randomUUID === 'function') {
-      id = crypto.randomUUID(); 
+      id = crypto.randomUUID();
     } else {
-      id = uuidv4();  
+      id = uuidv4();
     }
-    console.log('ID gerado para o toast:', id); 
+    console.log('ID gerado para o toast:', id);
 
     setToasts(prevToasts => [...prevToasts, { id, message, type }]);
 
@@ -38,11 +42,7 @@ export const ToastProvider = ({ children }) => {
         removeToast(id);
       }, duration);
     }
-  }, []);
-
-  const removeToast = useCallback((id) => {
-    setToasts(prevToasts => prevToasts.filter(toast => toast.id !== id));
-  }, []);
+  }, [removeToast]);
 
   return (
     <ToastContext.Provider value={{ addToast, removeToast, toasts }}>

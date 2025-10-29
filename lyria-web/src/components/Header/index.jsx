@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
+import { useRef } from 'react';
 import { baseURL } from '../../services/api';
-import logoImage from '../../../public/img/LogoBranca.png';
+import logoImage from '../../assets/img/LogoBranca.png';
+import useClickOutside from '../../hooks/useClickOutside';
 
 function Header({ 
   isAuthenticated, 
@@ -27,6 +29,9 @@ function Header({
     handleLogout();
   };
 
+  const dropdownRef = useRef(null);
+  useClickOutside(dropdownRef, () => setDropdownVisible(false));
+
   return (
     <header className="app-header">
       <Link to={'/'} className="logo-link">
@@ -37,7 +42,7 @@ function Header({
 
       <nav className="main-nav">
         {isAuthenticated ? (
-          <div className="user-profile-section">
+          <div className="user-profile-section" ref={dropdownRef}>
             <div
               className="user-indicator"
               onClick={handleUserClick}
@@ -55,13 +60,6 @@ function Header({
 
             {dropdownVisible && (
               <div className="user-dropdown-initial">
-                <Link 
-                  to="/profile" 
-                  className="dropdown-link"
-                  onClick={() => console.log('[Header] Navegando para perfil')}
-                >
-                  Ver Perfil
-                </Link>
                 <button onClick={handleLogoutClick}>Sair</button>
               </div>
             )}

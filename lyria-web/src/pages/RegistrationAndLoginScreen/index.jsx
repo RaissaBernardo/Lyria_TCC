@@ -85,7 +85,7 @@ function LoginRegisterPage() {
         try {
           const response = await getPersonas();
           setPersonas(response.personas || {});
-        } catch (error) {
+        } catch {
           addToast("Não foi possível carregar as personas.", "error");
         }
       };

@@ -1,58 +1,37 @@
-import { FiClock, FiPlus } from "react-icons/fi";
+import { FiClock, FiPlus, FiSettings } from "react-icons/fi";
 import { FaVolumeUp, FaVolumeMute } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import logoImage from "../../assets/img/LogoBranca.png";
 
 const ChatHeader = ({
   onHistoryClick,
-  personas,
-  selectedPersona,
-  onPersonaChange,
-  availableVoices,
-  selectedVoice,
-  onVoiceChange,
   isSpeechEnabled,
   onToggleSpeech,
   onNewChatClick,
+  onSettingsClick,
 }) => {
   return (
     <header className="galaxy-chat-header">
-      <button
-        className="header-icon-btn"
-        onClick={onHistoryClick}
-        title="Histórico"
-      >
-        <FiClock />
-      </button>
-      <Link to="/" className="header-title-link">
-        <h1>LyrIA</h1>
-      </Link>
-      <div className="header-voice-controls">
-        {Object.keys(personas).length > 0 && (
-          <select
-            value={selectedPersona}
-            onChange={onPersonaChange}
-            className="voice-select"
-            title="Selecionar persona"
-          >
-            {Object.keys(personas).map((key) => (
-              <option key={key} value={key}>
-                {key.charAt(0).toUpperCase() + key.slice(1)}
-              </option>
-            ))}
-          </select>
-        )}
-        <select
-          value={selectedVoice}
-          onChange={onVoiceChange}
-          className="voice-select"
-          title="Selecionar voz"
+      <div className="header-group-left">
+        <button
+          className="header-icon-btn"
+          onClick={onHistoryClick}
+          title="Histórico"
         >
-          {availableVoices.map((voice) => (
-            <option key={voice.value} value={voice.value}>
-              {voice.label}
-            </option>
-          ))}
-        </select>
+          <FiClock />
+        </button>
+        <button
+          onClick={onSettingsClick}
+          className="header-icon-btn"
+          title="Configurações"
+        >
+          <FiSettings />
+        </button>
+      </div>
+      <Link to="/" className="header-title-link">
+        <img src={logoImage} alt="LyrIA Logo" className="header-logo" />
+      </Link>
+      <div className="header-group-right">
         <button
           onClick={onToggleSpeech}
           className="header-icon-btn"
