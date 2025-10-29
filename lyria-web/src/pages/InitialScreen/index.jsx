@@ -113,9 +113,9 @@ function InitialScreen() {
           ) : (
             <div className="nav-actions">
               <Link to={'/RegistrationAndLogin'} className="nav-button">Entrar</Link>
-              <button onClick={toggleContactModal} className="nav-button">Contato</button>
             </div>
           )}
+          <button onClick={toggleContactModal} className="nav-button">Contato</button>
         </nav>
       </header>
 
