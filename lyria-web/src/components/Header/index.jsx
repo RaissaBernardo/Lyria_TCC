@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { baseURL } from '../../services/api';
-import logoImage from '../../../public/img/LogoBranca.png';
+import logoImage from '../../assets/img/LogoBranca.png';
 
 function Header({ 
   isAuthenticated, 
@@ -55,13 +55,6 @@ function Header({
 
             {dropdownVisible && (
               <div className="user-dropdown-initial">
-                <Link 
-                  to="/profile" 
-                  className="dropdown-link"
-                  onClick={() => console.log('[Header] Navegando para perfil')}
-                >
-                  Ver Perfil
-                </Link>
                 <button onClick={handleLogoutClick}>Sair</button>
               </div>
             )}

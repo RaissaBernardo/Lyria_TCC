@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { FiCopy, FiCheck } from 'react-icons/fi';
 import './styles.css';
 
-const CodeBlock = ({ node, inline, className, children, ...props }) => {
+const CodeBlock = ({ inline, className, children, ...props }) => {
   const [isCopied, setIsCopied] = useState(false);
   const match = /language-(\w+)/.exec(className || '');
   const codeText = String(children).replace(/\n$/, '');

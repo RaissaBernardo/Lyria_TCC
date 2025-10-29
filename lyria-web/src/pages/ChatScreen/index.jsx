@@ -1,12 +1,10 @@
 /* eslint-disable no-irregular-whitespace */
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import "./Styles/styles.css";
 import {
   conversarAnonimo,
   getConversations,
-  getMessagesForConversation,
   postMessage,
-  deleteConversation,
   getPersonas,
   putPersona,
   getPersona,
@@ -28,6 +26,7 @@ import ChatHeader from "../../components/ChatHeader";
 import MessageList from "../../components/MessageList";
 import ChatInput from "../../components/ChatInput";
 import PromptSuggestions from "../../components/PromptSuggestions";
+import SettingsModal from "../../components/SettingsModal";
 
 const speechConfig = SpeechConfig.fromSubscription(
   import.meta.env.VITE_SPEECH_KEY,
@@ -60,9 +59,9 @@ function ChatContent() {
   const [chatBodyAnimationClass, setChatBodyAnimationClass] = useState("fade-in");
   const [isLoginPromptVisible, setLoginPromptVisible] = useState(false);
   const [isDeleteModalVisible, setDeleteModalVisible] = useState(false);
-  const [chatToDelete, setChatToDelete] = useState(null);
   const [personas, setPersonas] = useState({});
   const [selectedPersona, setSelectedPersona] = useState("professor");
+  const [isSettingsModalVisible, setSettingsModalVisible] = useState(false);
 
   useEffect(() => {
     const fetchPersonas = async () => {
@@ -93,7 +92,7 @@ function ChatContent() {
     loadUserPersona();
   }, [isAuthenticated, user, personas]);
 
-  const fetchConversations = async () => {
+  const fetchConversations = useCallback(async () => {
     if (isAuthenticated && user) {
       try {
         const response = await getConversations();
@@ -114,11 +113,11 @@ function ChatContent() {
     } else {
       setConversations([]);
     }
-  };
+  }, [isAuthenticated, user]);
 
   useEffect(() => {
     fetchConversations();
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, fetchConversations]);
 
   useEffect(() => {
     const savedVoice = localStorage.getItem("lyriaVoice");
@@ -133,8 +132,8 @@ function ChatContent() {
     return text
       .replace(/```[\s\S]*?```/g, " ")
       .replace(/`/g, "").replace(/\*\*/g, "").replace(/\*/g, "")
-      .replace(/#{1,6}\s/g, "").replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1")
-      .replace(/!\[[^\]]*\]\([^\)]+\)/g, " ").trim();
+      .replace(/#{1,6}\s/g, "").replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+      .replace(/!\[[^\]]*\]\([^)]+\)/g, " ").trim();
   };
 
   const speakResponse = (text) => {
@@ -179,8 +178,8 @@ function ChatContent() {
       const botMessage = { id: crypto.randomUUID(), sender: "bot", text: response.resposta, animate: true };
       setMessages((prev) => [...prev, botMessage]);
       speakResponse(response.resposta);
-    } catch (error) {
-      if (error.name !== "AbortError") {
+    } catch (err) {
+      if (err.name !== "AbortError") {
         const errorMessage = { id: crypto.randomUUID(), sender: "bot", text: "Desculpe, ocorreu um erro." };
         setMessages((prev) => [...prev, errorMessage]);
         speakResponse(errorMessage.text);
@@ -280,7 +279,7 @@ function ChatContent() {
       try {
         await putPersona(newPersona);
         addToast("Persona atualizada com sucesso!", "success");
-      } catch (error) {
+      } catch {
         addToast("Erro ao atualizar a persona.", "error");
       }
     }
@@ -296,6 +295,16 @@ function ChatContent() {
         title="Confirmar Exclusão"
         message="Você tem certeza que deseja apagar esta conversa? Esta ação não pode ser desfeita."
       />
+      <SettingsModal
+        isOpen={isSettingsModalVisible}
+        onClose={() => setSettingsModalVisible(false)}
+        personas={personas}
+        selectedPersona={selectedPersona}
+        onPersonaChange={handlePersonaChange}
+        availableVoices={availableVoices}
+        selectedVoice={selectedVoice}
+        onVoiceChange={handleVoiceChange}
+      />
       <HistoryPanel
         isVisible={isHistoryVisible}
         onClose={() => setHistoryVisible(false)}
@@ -306,15 +315,10 @@ function ChatContent() {
       <main className={`galaxy-chat-area ${isHistoryVisible ? "history-open" : ""}`}>
         <ChatHeader
           onHistoryClick={handleHistoryClick}
-          personas={personas}
-          selectedPersona={selectedPersona}
-          onPersonaChange={handlePersonaChange}
-          availableVoices={availableVoices}
-          selectedVoice={selectedVoice}
-          onVoiceChange={handleVoiceChange}
           isSpeechEnabled={isSpeechEnabled}
           onToggleSpeech={() => setIsSpeechEnabled((p) => !p)}
           onNewChatClick={handleNewChatClick}
+          onSettingsClick={() => setSettingsModalVisible(true)}
         />
         <div className={`galaxy-chat-body ${chatBodyAnimationClass}`}>
           {messages.length === 0 ? (
