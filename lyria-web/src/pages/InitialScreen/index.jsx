@@ -1,185 +1,169 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './Styles/styles.css';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useModal } from '../../hooks/useModal';
 import LoginPrompt from '../../components/LoginPrompt';
-import { baseURL } from '../../services/api';
-import { FaTimes } from "react-icons/fa";
-import { FiGithub, FiInstagram } from "react-icons/fi";
-import logoImage from '/img/LogoBranca.png';
+import Header from '../../components/Header';
+import HeroSection from '../../components/HeroSection';
+import InfoModal from '../../components/InfoModal';
+import ContactModal from '../../components/ContactModal';
 
 function InitialScreen() {
-  const [isInfoVisible, setInfoVisible] = useState(false);
-  const [isContactModalVisible, setContactModalVisible] = useState(false);
+  // Hooks de modais
+  const infoModal = useModal('InfoModal');
+  const contactModal = useModal('ContactModal');
+  
+  // Estados locais
   const [isLoginPromptVisible, setLoginPromptVisible] = useState(false);
-  const [isModalClosing, setIsModalClosing] = useState(false);
-  const { isAuthenticated, user, logout } = useAuth();
-  const navigate = useNavigate();
   const [dropdownVisible, setDropdownVisible] = useState(false);
 
-  const contactLinks = [
-    { icon: <FiGithub />, label: "LyrIA-Project", href: "https://github.com/RaissaBernardo/Lyria", targetBlank: true },
-    { icon: <FiInstagram />, label: "@rah_antonia", href: "https://www.instagram.com/rah_antonia", targetBlank: true },
-    { icon: <FiInstagram />, label: "@antonybriito", href: "https://www.instagram.com/antonybriito", targetBlank: true },
-    { icon: <FiInstagram />, label: "@jaogabxs", href: "https://www.instagram.com/jaogabxs", targetBlank: true },
-    { icon: <FiInstagram />, label: "@gabrielcardos095", href: "https://www.instagram.com/gabrielcardos095", targetBlank: true },
-    { icon: <FiInstagram />, label: "@vii_amaro", href: "https://www.instagram.com/vii_amaro", targetBlank: true },
-    { icon: <FiInstagram />, label: "@juli_naners", href: "https://www.instagram.com/juli_naners", targetBlank: true },
-  ];
+  // Contexto e navegação
+  const { isAuthenticated, user, logout } = useAuth();
+  const navigate = useNavigate();
 
-  const toggleInfoModal = () => {
-    if (isInfoVisible) {
-      setIsModalClosing(true);
-      setTimeout(() => {
-        setInfoVisible(false);
-        setIsModalClosing(false);
-      }, 500);
-    } else {
-      setInfoVisible(true);
-    }
-  };
+  // ==================== LIFECYCLE LOGS ====================
+  
+  useEffect(() => {
+    console.log('╔════════════════════════════════════════╗');
+    console.log('║   [InitialScreen] COMPONENTE MONTADO   ║');
+    console.log('╚════════════════════════════════════════╝');
+    console.log('[InitialScreen] Estado inicial:', {
+      isAuthenticated,
+      userName: user?.nome,
+      userEmail: user?.email,
+      hasProfilePicture: !!user?.foto_perfil_url
+    });
 
-  const toggleContactModal = () => {
-    if (isContactModalVisible) {
-      setIsModalClosing(true);
-      setTimeout(() => {
-        setContactModalVisible(false);
-        setIsModalClosing(false);
-      }, 500);
-    } else {
-      setContactModalVisible(true);
-    }
-  };
+    return () => {
+      console.log('[InitialScreen] 🔴 Componente desmontado');
+    };
+  }, []);
 
+  useEffect(() => {
+    console.log('[InitialScreen] 🔐 Mudança de autenticação:', {
+      isAuthenticated,
+      user: user?.nome || 'Não autenticado',
+      timestamp: new Date().toISOString()
+    });
+  }, [isAuthenticated, user]);
+
+  useEffect(() => {
+    console.log('[InitialScreen] 📊 Estados dos componentes:', {
+      infoModal: infoModal.isVisible,
+      contactModal: contactModal.isVisible,
+      loginPrompt: isLoginPromptVisible,
+      userDropdown: dropdownVisible
+    });
+  }, [
+    infoModal.isVisible, 
+    contactModal.isVisible, 
+    isLoginPromptVisible, 
+    dropdownVisible
+  ]);
+
+  // ==================== HANDLERS ====================
+
+  /**
+   * Realiza logout do usuário
+   */
   const handleLogout = () => {
-    logout();
-    setDropdownVisible(false);
+    console.log('[InitialScreen] 🚪 Iniciando processo de logout');
+    console.log('[InitialScreen] Usuário atual:', user?.nome);
+    
+    try {
+      logout();
+      setDropdownVisible(false);
+      console.log('[InitialScreen] ✅ Logout concluído com sucesso');
+    } catch (error) {
+      console.error('[InitialScreen] ❌ Erro ao fazer logout:', error);
+    }
   };
 
+  /**
+   * Inicia a aplicação - verifica autenticação
+   */
   const handleStartClick = () => {
+    console.log('═══════════════════════════════════════');
+    console.log('[InitialScreen] 🚀 BOTÃO COMEÇAR CLICADO');
+    console.log('═══════════════════════════════════════');
+    console.log('[InitialScreen] Status de autenticação:', isAuthenticated);
+    
     if (isAuthenticated) {
+      console.log('[InitialScreen] ➡️  Redirecionando para /chat (usuário autenticado)');
+      console.log('[InitialScreen] Usuário:', user?.nome);
       navigate('/chat');
     } else {
+      console.log('[InitialScreen] 🔒 Exibindo prompt de login (usuário não autenticado)');
       setLoginPromptVisible(true);
     }
   };
 
+  /**
+   * Continua como visitante sem autenticação
+   */
   const handleContinueAsGuest = () => {
+    console.log('[InitialScreen] 👤 Continuando como visitante');
+    console.log('[InitialScreen] Navegando para /chat sem autenticação');
+    setLoginPromptVisible(false);
     navigate('/chat');
   };
 
+  /**
+   * Fecha o prompt de login
+   */
+  const handleDismissLoginPrompt = () => {
+    console.log('[InitialScreen] ❌ Fechando prompt de login');
+    setLoginPromptVisible(false);
+  };
+
+  // ==================== RENDER ====================
+
+  console.log('[InitialScreen] 🎨 Renderizando componente principal...');
+
   return (
     <div className="App">
+      {/* Prompt de Login */}
       {isLoginPromptVisible && (
-        <LoginPrompt
-          onDismiss={() => setLoginPromptVisible(false)}
-          onContinueAsGuest={handleContinueAsGuest}
-          showContinueAsGuest={true}
-        />
+        <>
+          {console.log('[InitialScreen] Renderizando LoginPrompt')}
+          <LoginPrompt
+            onDismiss={handleDismissLoginPrompt}
+            onContinueAsGuest={handleContinueAsGuest}
+            showContinueAsGuest={true}
+          />
+        </>
       )}
 
-      <header className="app-header">
-        <Link to={'/'} className="logo-link">
-          <div className="logo">
-            <img src={logoImage} alt="Logo da LyrIA" className="logo-image" />
-          </div>
-        </Link>
+      {/* Cabeçalho */}
+      <Header
+        isAuthenticated={isAuthenticated}
+        user={user}
+        dropdownVisible={dropdownVisible}
+        setDropdownVisible={setDropdownVisible}
+        handleLogout={handleLogout}
+        toggleContactModal={contactModal.toggle}
+      />
 
-        <nav className="main-nav">
-          {isAuthenticated ? (
-            <div className="user-profile-section">
-              <div
-                className="user-indicator"
-                onClick={() => setDropdownVisible(!dropdownVisible)}
-              >
-                {user?.foto_perfil_url ? (
-                  <img
-                    src={`${baseURL}${user.foto_perfil_url}`}
-                    alt="Foto de perfil"
-                    className="user-profile-pic"
-                  />
-                ) : (
-                  user?.nome?.charAt(0).toUpperCase()
-                )}
-              </div>
+      {/* Seção Principal (Hero) */}
+      <HeroSection
+        onStartClick={handleStartClick}
+        onLearnMoreClick={infoModal.toggle}
+      />
 
-              {dropdownVisible && (
-                <div className="user-dropdown-initial">
-                  <Link to="/profile" className="dropdown-link">Ver Perfil</Link>
-                  <button onClick={handleLogout}>Sair</button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="nav-actions">
-              <Link to={'/RegistrationAndLogin'} className="nav-button">Entrar</Link>
-            </div>
-          )}
-          <button onClick={toggleContactModal} className="nav-button">Contato</button>
-        </nav>
-      </header>
+      {/* Modal de Informações */}
+      <InfoModal
+        isVisible={infoModal.isVisible}
+        isClosing={infoModal.isClosing}
+        onClose={infoModal.toggle}
+      />
 
-      <div className="main-content">
-        <div id="frase_efeito"><b>Conheça LyrIA</b></div>
-        <span id="espaço"></span>
-        <div className="botoes-container">
-          <button id="comecar" onClick={handleStartClick}>
-            Começar
-          </button>
-          <button id="sobre" onClick={toggleInfoModal}>
-            Saiba Mais
-          </button>
-        </div>
-      </div>
-
-      {isInfoVisible && (
-        <div className={`info-modal-backdrop ${isModalClosing ? 'fade-out' : ''}`}>
-          <div className={`info-modal-content ${isModalClosing ? 'slide-out' : ''}`}>
-            <button className="close-modal-btn" onClick={toggleInfoModal}><FaTimes /></button>
-            <h2>Sobre a LyrIA</h2>
-            <p>
-              LyrIA é uma assistente virtual de última geração, projetada para ser sua companheira em um universo de conhecimento e criatividade.
-            </p>
-            <p>
-              Nossa missão é fornecer respostas rápidas, insights valiosos e ajudar você a explorar novas ideias de forma intuitiva e eficiente. Construída com as mais recentes tecnologias de inteligência artificial, a LyrIA aprende e se adapta às suas necessidades.
-            </p>
-            <h3>Funcionalidades Principais:</h3>
-            <ul>
-              <li>Respostas instantâneas e precisas.</li>
-              <li>Assistência criativa para seus projetos.</li>
-              <li>Interface amigável e personalizável.</li>
-              <li>Integração com diversas ferramentas.</li>
-            </ul>
-          </div>
-        </div>
-      )}
-
-      {isContactModalVisible && (
-        <div className={`info-modal-backdrop ${isModalClosing ? 'fade-out' : ''}`}>
-          <div className={`info-modal-content ${isModalClosing ? 'slide-out' : ''}`}>
-            <button className="close-modal-btn" onClick={toggleContactModal}><FaTimes /></button>
-            <h2>Contato</h2>
-            <div className="contact-info">
-              <p>Para dúvidas, sugestões ou suporte, entre em contato conosco através dos seguintes canais:</p>
-              <div className="contact-links">
-                {contactLinks.map((link) => (
-                  <a
-                    key={link.href}
-                    href={link.href}
-                    target={link.targetBlank ? "_blank" : undefined}
-                    rel={link.targetBlank ? "noopener noreferrer" : ""}
-                    className="contact-link-item"
-                  >
-                    {link.icon}
-                    <span>{link.label}</span>
-                  </a>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
+      {/* Modal de Contato */}
+      <ContactModal
+        isVisible={contactModal.isVisible}
+        isClosing={contactModal.isClosing}
+        onClose={contactModal.toggle}
+      />
     </div>
   );
 }
