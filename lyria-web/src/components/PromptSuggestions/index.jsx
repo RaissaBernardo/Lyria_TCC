@@ -1,14 +1,10 @@
-import { Link } from "react-router-dom";
-import logoImage from "../../assets/img/LogoBranca.png";
+import { RiRobot2Line } from "react-icons/ri";
 
 const PromptSuggestions = ({ onSuggestionClick }) => (
   <div className="suggestions-container">
     <div className="lyria-icon-large">
-      <img src={logoImage} alt="LyrIA" />
+      <RiRobot2Line />
     </div>
-    <Link to="/" className="back-to-home-link">
-      Voltar para tela inicial
-    </Link>
     <h2>Como posso ajudar hoje?</h2>
     <div className="suggestions-grid">
       <div

@@ -1,6 +1,7 @@
 import { FiClock, FiPlus, FiSettings } from "react-icons/fi";
 import { FaVolumeUp, FaVolumeMute } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import logoImage from "../../assets/img/LogoBranca.png";
 
 const ChatHeader = ({
   onHistoryClick,
@@ -11,23 +12,13 @@ const ChatHeader = ({
 }) => {
   return (
     <header className="galaxy-chat-header">
-      <button
-        className="header-icon-btn"
-        onClick={onHistoryClick}
-        title="Histórico"
-      >
-        <FiClock />
-      </button>
-      <Link to="/" className="header-title-link">
-        <h1>LyrIA</h1>
-      </Link>
-      <div className="header-voice-controls">
+      <div className="header-group-left">
         <button
-          onClick={onToggleSpeech}
           className="header-icon-btn"
-          title={isSpeechEnabled ? "Desativar voz" : "Ativar voz"}
+          onClick={onHistoryClick}
+          title="Histórico"
         >
-          {isSpeechEnabled ? <FaVolumeUp /> : <FaVolumeMute />}
+          <FiClock />
         </button>
         <button
           onClick={onSettingsClick}
@@ -35,6 +26,18 @@ const ChatHeader = ({
           title="Configurações"
         >
           <FiSettings />
+        </button>
+      </div>
+      <Link to="/" className="header-title-link">
+        <img src={logoImage} alt="LyrIA Logo" className="header-logo" />
+      </Link>
+      <div className="header-group-right">
+        <button
+          onClick={onToggleSpeech}
+          className="header-icon-btn"
+          title={isSpeechEnabled ? "Desativar voz" : "Ativar voz"}
+        >
+          {isSpeechEnabled ? <FaVolumeUp /> : <FaVolumeMute />}
         </button>
         <button
           className="header-icon-btn"
