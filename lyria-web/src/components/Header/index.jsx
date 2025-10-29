@@ -41,7 +41,27 @@ function Header({
       </Link>
 
       <nav className="main-nav">
-        {isAuthenticated ? (
+        {!isAuthenticated && (
+          <div className="nav-actions">
+            <Link
+              to={'/RegistrationAndLogin'}
+              className="nav-button"
+              onClick={() => console.log('[Header] Navegando para login')}
+            >
+              Entrar
+            </Link>
+            <button
+              onClick={() => {
+                console.log('[Header] Abrindo modal de contato');
+                toggleContactModal();
+              }}
+              className="nav-button"
+            >
+              Contato
+            </button>
+          </div>
+        )}
+        {isAuthenticated && (
           <div className="user-profile-section" ref={dropdownRef}>
             <div
               className="user-indicator"
@@ -63,25 +83,6 @@ function Header({
                 <button onClick={handleLogoutClick}>Sair</button>
               </div>
             )}
-          </div>
-        ) : (
-          <div className="nav-actions">
-            <Link 
-              to={'/RegistrationAndLogin'} 
-              className="nav-button"
-              onClick={() => console.log('[Header] Navegando para login')}
-            >
-              Entrar
-            </Link>
-            <button 
-              onClick={() => {
-                console.log('[Header] Abrindo modal de contato');
-                toggleContactModal();
-              }} 
-              className="nav-button"
-            >
-              Contato
-            </button>
           </div>
         )}
       </nav>

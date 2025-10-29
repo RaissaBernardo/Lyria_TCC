@@ -8,7 +8,7 @@ import {
   FaVolumeUp,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { register, getPersonas } from "../../services/LyriaApi";
+import { register, getPersonas, esqueciMinhaSenha } from "../../services/LyriaApi";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import "./Styles/styles.css";
@@ -129,6 +129,30 @@ function LoginRegisterPage() {
         navigate("/chat");
       } else {
         addToast(response.erro || "Erro ao fazer login.", "error");
+      }
+    } catch (err) {
+      addToast(
+        err.response?.data?.erro || "Erro de conexão. Tente novamente.",
+        "error"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      addToast("Por favor, digite seu e-mail para redefinir a senha.", "error");
+      return;
+    }
+    setLoading(true);
+    try {
+      // Simulação de chamada de API
+      const response = await esqueciMinhaSenha({ email });
+      if (response.status === "ok") {
+        addToast("Se um usuário com este e-mail existir, um link de redefinição de senha será enviado.", "success");
+      } else {
+        addToast(response.erro || "Ocorreu um erro. Tente novamente.", "error");
       }
     } catch (err) {
       addToast(
@@ -367,9 +391,9 @@ function LoginRegisterPage() {
           {passwordVisible ? <FaEyeSlash /> : <FaEye />}
         </span>
       </div>
-      <a href="#" className="forgot-password">
+      <button type="button" onClick={handleForgotPassword} className="forgot-password">
         Esqueceu sua senha?
-      </a>
+      </button>
       <button type="submit" className="submit-btn" disabled={loading}>
         {loading ? "ENTRANDO..." : "ENTRAR"}
       </button>
