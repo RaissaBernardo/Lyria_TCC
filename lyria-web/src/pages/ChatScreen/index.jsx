@@ -117,7 +117,7 @@ function ChatContent() {
 
   useEffect(() => {
     fetchConversations();
-  }, [isAuthenticated, user, fetchConversations]);
+  }, [isAuthenticated, user]);
 
   useEffect(() => {
     const savedVoice = localStorage.getItem("lyriaVoice");
