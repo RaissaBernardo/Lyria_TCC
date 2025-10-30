@@ -15,10 +15,7 @@ function AnimatedBotMessage({
 
   useEffect(() => {
     if (isScrolling && messageRef.current) {
-      const parent = messageRef.current.parentElement;
-      if (parent) {
-        parent.scrollTop = parent.scrollHeight;
-      }
+      messageRef.current.scrollIntoView({ behavior: "auto", block: "nearest" });
     }
   }, [text, isScrolling]);
 
