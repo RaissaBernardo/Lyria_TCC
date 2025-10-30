@@ -324,7 +324,11 @@ function ChatContent() {
           {messages.length === 0 ? (
             <PromptSuggestions onSuggestionClick={handleSend} />
           ) : (
-            <MessageList messages={messages} isBotTyping={isBotTyping} />
+            <MessageList
+              messages={messages}
+              isBotTyping={isBotTyping}
+            	onTypingEnd={() => {}}
+            />
           )}
         </div>
         <ChatInput

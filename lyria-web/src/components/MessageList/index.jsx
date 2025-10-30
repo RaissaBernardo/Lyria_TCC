@@ -3,9 +3,10 @@ import { RiRobot2Line } from "react-icons/ri";
 import AnimatedBotMessage from "../AnimatedBotMessage";
 import { useState, useEffect, useRef } from "react";
 
-const MessageList = ({ messages, isBotTyping }) => {
+const MessageList = ({ messages, isBotTyping, onTypingEnd }) => {
   const [copiedId, setCopiedId] = useState(null);
   const messagesEndRef = useRef(null);
+  const [isScrolling, setIsScrolling] = useState(true);
 
   const handleCopyToClipboard = (text, id) => {
     navigator.clipboard.writeText(text);
@@ -14,15 +15,26 @@ const MessageList = ({ messages, isBotTyping }) => {
   };
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (isScrolling) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.target;
+    if (scrollTop + clientHeight < scrollHeight - 5) {
+      setIsScrolling(false);
+    } else {
+      setIsScrolling(true);
+    }
   };
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isBotTyping]);
+  }, [messages, isBotTyping, isScrolling]);
 
   return (
-    <>
+    <div onScroll={handleScroll} style={{ overflowY: "auto", height: "100%" }}>
       {messages.map((msg, index) => (
         <div key={msg.id || index} className={`message-wrapper ${msg.sender}`}>
           <div className="avatar-icon">
@@ -32,7 +44,17 @@ const MessageList = ({ messages, isBotTyping }) => {
             <span className="sender-name">
               {msg.sender === "bot" ? "LyrIA" : "Você"}
             </span>
-            <AnimatedBotMessage fullText={msg.text} animate={msg.animate} />
+            <AnimatedBotMessage
+              fullText={msg.text}
+              animate={msg.animate}
+              isLastMessage={index === messages.length - 1}
+              isScrolling={isScrolling}
+              onTypingEnd={() => {
+                onTypingEnd();
+                setIsScrolling(true);
+                scrollToBottom();
+              }}
+            />
             {msg.sender === "bot" && (
               <button
                 className="copy-btn"
@@ -60,7 +82,7 @@ const MessageList = ({ messages, isBotTyping }) => {
         </div>
       )}
       <div ref={messagesEndRef} />
-    </>
+    </div>
   );
 };
 
