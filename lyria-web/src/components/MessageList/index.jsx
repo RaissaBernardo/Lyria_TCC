@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from "react";
 const MessageList = ({ messages, isBotTyping, onTypingEnd }) => {
   const [copiedId, setCopiedId] = useState(null);
   const messagesEndRef = useRef(null);
-  const [isScrolling, setIsScrolling] = useState(true);
+  const isScrollingRef = useRef(true);
 
   const handleCopyToClipboard = (text, id) => {
     navigator.clipboard.writeText(text);
@@ -15,28 +15,24 @@ const MessageList = ({ messages, isBotTyping, onTypingEnd }) => {
   };
 
   const scrollToBottom = () => {
-    if (isScrolling) {
+    if (isScrollingRef.current) {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   };
 
   const handleScroll = (e) => {
     const { scrollTop, scrollHeight, clientHeight } = e.target;
-    if (scrollTop + clientHeight < scrollHeight - 5) {
-      setIsScrolling(false);
-    } else {
-      setIsScrolling(true);
-    }
+    isScrollingRef.current = scrollTop + clientHeight >= scrollHeight - 5;
   };
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isBotTyping, isScrolling]);
+  }, [messages, isBotTyping]);
 
   return (
     <div onScroll={handleScroll} style={{ overflowY: "auto", height: "100%" }}>
       {messages.map((msg, index) => (
-        <div key={msg.id || index} className={`message-wrapper ${msg.sender}`}>
+        <div key={msg.id} className={`message-wrapper ${msg.sender}`}>
           <div className="avatar-icon">
             {msg.sender === "bot" ? <RiRobot2Line /> : <FiUser />}
           </div>
@@ -48,10 +44,10 @@ const MessageList = ({ messages, isBotTyping, onTypingEnd }) => {
               fullText={msg.text}
               animate={msg.animate}
               isLastMessage={index === messages.length - 1}
-              isScrolling={isScrolling}
+              isScrolling={isScrollingRef.current}
               onTypingEnd={() => {
                 onTypingEnd();
-                setIsScrolling(true);
+                isScrollingRef.current = true;
                 scrollToBottom();
               }}
             />
