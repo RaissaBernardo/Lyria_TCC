@@ -117,7 +117,7 @@ function ChatContent() {
 
   useEffect(() => {
     fetchConversations();
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, fetchConversations]);
 
   useEffect(() => {
     const savedVoice = localStorage.getItem("lyriaVoice");
@@ -154,13 +154,14 @@ function ChatContent() {
     const trimmedInput = (typeof textToSend === "string" ? textToSend : input).trim();
     if (!trimmedInput || isBotTyping || isListening) return;
 
+    requestCancellationRef.current?.cancel();
+
     const userMessage = { id: crypto.randomUUID(), sender: "user", text: trimmedInput };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsBotTyping(true);
 
     try {
-		requestCancellationRef.current?.cancel();
       const controller = new AbortController();
       requestCancellationRef.current = { cancel: () => controller.abort() };
 
@@ -190,6 +191,18 @@ function ChatContent() {
       setIsBotTyping(false);
     }
   };
+
+  const handleStop = () => {
+    requestCancellationRef.current?.cancel();
+    setIsBotTyping(false);
+  };
+
+  const handleInputChange = (e) => {
+    setInput(e.target.value);
+    if (isBotTyping) {
+      handleStop();
+    }
+  };
 
   const handleMicClick = () => {
     if (isListening) return;
@@ -335,8 +348,9 @@ function ChatContent() {
         </div>
         <ChatInput
           input={input}
-          setInput={setInput}
+          setInput={handleInputChange}
           handleSend={handleSend}
+          handleStop={handleStop}
           handleMicClick={handleMicClick}
           isBotTyping={isBotTyping}
           isListening={isListening}

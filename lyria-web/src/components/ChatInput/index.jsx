@@ -1,4 +1,4 @@
-import { FiSend, FiPaperclip, FiMic } from "react-icons/fi";
+import { FiSend, FiPaperclip, FiMic, FiSquare } from "react-icons/fi";
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "../../context/ToastContext";
 
@@ -6,6 +6,7 @@ const ChatInput = ({
   input,
   setInput,
   handleSend,
+  handleStop,
   handleMicClick,
   isBotTyping,
   isListening,
@@ -71,19 +72,25 @@ const ChatInput = ({
         onKeyDown={handleKeyDown}
         placeholder="Digite sua mensagem para LyrIA..."
         rows="1"
-        disabled={isListening}
+        disabled={isBotTyping || isListening}
       />
       <FiMic
         className={`input-icon mic-icon ${isListening ? "listening" : ""}`}
         onClick={handleMicClick}
       />
-      <button
-        onClick={() => handleSend()}
-        disabled={!input.trim() || isBotTyping || isListening}
-        className="send-btn"
-      >
-        <FiSend />
-      </button>
+      {isBotTyping ? (
+        <button onClick={handleStop} className="send-btn stop-btn">
+          <FiSquare />
+        </button>
+      ) : (
+        <button
+          onClick={() => handleSend()}
+          disabled={!input.trim() || isListening}
+          className="send-btn"
+        >
+          <FiSend />
+        </button>
+      )}
     </footer>
   );
 };
