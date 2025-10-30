@@ -154,14 +154,13 @@ function ChatContent() {
     const trimmedInput = (typeof textToSend === "string" ? textToSend : input).trim();
     if (!trimmedInput || isBotTyping || isListening) return;
 
-    requestCancellationRef.current?.cancel();
-
     const userMessage = { id: crypto.randomUUID(), sender: "user", text: trimmedInput };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsBotTyping(true);
 
     try {
+		requestCancellationRef.current?.cancel();
       const controller = new AbortController();
       requestCancellationRef.current = { cancel: () => controller.abort() };
 
