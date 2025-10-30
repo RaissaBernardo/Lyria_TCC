@@ -176,7 +176,10 @@ function ChatContent() {
       }
 
       const botMessage = { id: crypto.randomUUID(), sender: "bot", text: response.resposta, animate: true };
-      setMessages((prev) => [...prev, botMessage]);
+			setMessages((prev) => [
+				...prev.map((m) => ({ ...m, animate: false })),
+				botMessage,
+			]);
       speakResponse(response.resposta);
     } catch (err) {
       if (err.name !== "AbortError") {
