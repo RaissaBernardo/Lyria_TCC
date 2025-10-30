@@ -6,7 +6,6 @@ import { useState, useEffect, useRef } from "react";
 const MessageList = ({ messages, isBotTyping, onTypingEnd }) => {
   const [copiedId, setCopiedId] = useState(null);
   const messagesEndRef = useRef(null);
-  const isScrollingRef = useRef(true);
 
   const handleCopyToClipboard = (text, id) => {
     navigator.clipboard.writeText(text);
@@ -15,14 +14,7 @@ const MessageList = ({ messages, isBotTyping, onTypingEnd }) => {
   };
 
   const scrollToBottom = () => {
-    if (isScrollingRef.current) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  };
-
-  const handleScroll = (e) => {
-    const { scrollTop, scrollHeight, clientHeight } = e.target;
-    isScrollingRef.current = scrollTop + clientHeight >= scrollHeight - 5;
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
@@ -30,7 +22,7 @@ const MessageList = ({ messages, isBotTyping, onTypingEnd }) => {
   }, [messages, isBotTyping]);
 
   return (
-    <div onScroll={handleScroll} style={{ overflowY: "auto", height: "100%" }}>
+    <div style={{ overflowY: "auto", height: "100%" }}>
       {messages.map((msg, index) => (
         <div key={msg.id} className={`message-wrapper ${msg.sender}`}>
           <div className="avatar-icon">
@@ -44,12 +36,7 @@ const MessageList = ({ messages, isBotTyping, onTypingEnd }) => {
               fullText={msg.text}
               animate={msg.animate}
               isLastMessage={index === messages.length - 1}
-              isScrolling={isScrollingRef.current}
-              onTypingEnd={() => {
-                onTypingEnd();
-                isScrollingRef.current = true;
-                scrollToBottom();
-              }}
+              onTypingEnd={onTypingEnd}
             />
             {msg.sender === "bot" && (
               <button

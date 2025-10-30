@@ -3,30 +3,21 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import CodeBlock from "../CodeBlock";
 
-function AnimatedBotMessage({
-  fullText,
-  animate = true,
-  onTypingEnd,
-  isLastMessage,
-  isScrolling,
-}) {
+function AnimatedBotMessage({ fullText, animate = true, onTypingEnd }) {
   const [text, setText] = useState(animate ? "" : fullText);
   const messageRef = useRef(null);
 
   useEffect(() => {
-    if (isScrolling && messageRef.current) {
+    if (messageRef.current) {
       messageRef.current.scrollIntoView({ behavior: "auto", block: "nearest" });
     }
-  }, [text, isScrolling]);
-
-  const onTypingEndRef = useRef(onTypingEnd);
-  onTypingEndRef.current = onTypingEnd;
+  }, [text]);
 
   useEffect(() => {
     if (!animate) {
       setText(fullText);
-      if (isLastMessage && onTypingEndRef.current) {
-        onTypingEndRef.current();
+      if (onTypingEnd) {
+        onTypingEnd();
       }
       return;
     }
@@ -34,8 +25,8 @@ function AnimatedBotMessage({
     let timeoutId;
     const typeCharacter = (currentIndex) => {
       if (currentIndex > fullText.length) {
-        if (isLastMessage && onTypingEndRef.current) {
-          onTypingEndRef.current();
+        if (onTypingEnd) {
+          onTypingEnd();
         }
         return;
       }
@@ -48,7 +39,7 @@ function AnimatedBotMessage({
     typeCharacter(0);
 
     return () => clearTimeout(timeoutId);
-  }, [fullText, animate, isLastMessage]);
+  }, [fullText, animate, onTypingEnd]);
 
   return (
     <div className="message bot message-animated" ref={messageRef}>
