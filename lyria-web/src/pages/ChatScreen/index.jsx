@@ -191,6 +191,11 @@ function ChatContent() {
     }
   };
 
+  const handleStop = () => {
+    requestCancellationRef.current?.cancel();
+    setIsBotTyping(false);
+  };
+
   const handleMicClick = () => {
     if (isListening) return;
     const audioConfig = AudioConfig.fromDefaultMicrophoneInput();
@@ -337,6 +342,7 @@ function ChatContent() {
           input={input}
           setInput={setInput}
           handleSend={handleSend}
+          handleStop={handleStop}
           handleMicClick={handleMicClick}
           isBotTyping={isBotTyping}
           isListening={isListening}
