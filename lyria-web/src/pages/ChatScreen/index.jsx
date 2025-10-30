@@ -196,6 +196,13 @@ function ChatContent() {
     setIsBotTyping(false);
   };
 
+  const handleInputChange = (e) => {
+    setInput(e.target.value);
+    if (isBotTyping) {
+      handleStop();
+    }
+  };
+
   const handleMicClick = () => {
     if (isListening) return;
     const audioConfig = AudioConfig.fromDefaultMicrophoneInput();
@@ -340,7 +347,7 @@ function ChatContent() {
         </div>
         <ChatInput
           input={input}
-          setInput={setInput}
+          setInput={handleInputChange}
           handleSend={handleSend}
           handleStop={handleStop}
           handleMicClick={handleMicClick}

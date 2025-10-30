@@ -68,7 +68,7 @@ const ChatInput = ({
       <textarea
         ref={textareaRef}
         value={input}
-        onChange={(e) => setInput(e.target.value)}
+        onChange={setInput}
         onKeyDown={handleKeyDown}
         placeholder="Digite sua mensagem para LyrIA..."
         rows="1"
