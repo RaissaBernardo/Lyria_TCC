@@ -19,11 +19,14 @@ function AnimatedBotMessage({
     }
   }, [text, isScrolling]);
 
+  const onTypingEndRef = useRef(onTypingEnd);
+  onTypingEndRef.current = onTypingEnd;
+
   useEffect(() => {
     if (!animate) {
       setText(fullText);
-      if (isLastMessage && onTypingEnd) {
-        onTypingEnd();
+      if (isLastMessage && onTypingEndRef.current) {
+        onTypingEndRef.current();
       }
       return;
     }
@@ -31,8 +34,8 @@ function AnimatedBotMessage({
     let timeoutId;
     const typeCharacter = (currentIndex) => {
       if (currentIndex > fullText.length) {
-        if (isLastMessage && onTypingEnd) {
-          onTypingEnd();
+        if (isLastMessage && onTypingEndRef.current) {
+          onTypingEndRef.current();
         }
         return;
       }
@@ -45,7 +48,7 @@ function AnimatedBotMessage({
     typeCharacter(0);
 
     return () => clearTimeout(timeoutId);
-  }, [fullText, animate, isLastMessage, onTypingEnd]);
+  }, [fullText, animate, isLastMessage]);
 
   return (
     <div className="message bot message-animated" ref={messageRef}>
