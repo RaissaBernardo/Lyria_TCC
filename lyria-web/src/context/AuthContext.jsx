@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { login as apiLogin } from '../services/LyriaApi';
 import api from '../services/api'; // Importe a instância do axios
 
@@ -111,17 +111,17 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('lyriaUser', JSON.stringify(userData));
   };
 
+  const contextValue = useMemo(() => ({
+    user,
+    isAuthenticated,
+    login,
+    logout,
+    updateUser,
+    loading,
+  }), [user, isAuthenticated, loading]);
+
   return (
-    <AuthContext.Provider 
-      value={{ 
-        user, 
-        isAuthenticated, 
-        login, 
-        logout, 
-        updateUser,
-        loading 
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
