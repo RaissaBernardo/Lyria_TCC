@@ -72,7 +72,6 @@ const ChatInput = ({
         onKeyDown={handleKeyDown}
         placeholder="Digite sua mensagem para LyrIA..."
         rows="1"
-        disabled={isBotTyping || isListening}
       />
       <FiMic
         className={`input-icon mic-icon ${isListening ? "listening" : ""}`}
