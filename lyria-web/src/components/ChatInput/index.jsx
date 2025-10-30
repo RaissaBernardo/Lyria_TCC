@@ -3,14 +3,13 @@ import { useState, useEffect, useRef } from "react";
 import { useToast } from "../../context/ToastContext";
 
 const ChatInput = ({
-  input,
-  setInput,
   handleSend,
   handleStop,
   handleMicClick,
   isBotTyping,
   isListening,
 }) => {
+  const [text, setText] = useState("");
   const [isAttachmentMenuVisible, setAttachmentMenuVisible] = useState(false);
   const textareaRef = useRef(null);
   const { addToast } = useToast();
@@ -21,12 +20,17 @@ const ChatInput = ({
       const scrollHeight = textareaRef.current.scrollHeight;
       textareaRef.current.style.height = `${scrollHeight}px`;
     }
-  }, [input]);
+  }, [text]);
+
+  const handleLocalSend = () => {
+    handleSend(text);
+    setText("");
+  };
 
   const handleKeyDown = (event) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
-      handleSend();
+      handleLocalSend();
     }
   };
 
@@ -67,8 +71,8 @@ const ChatInput = ({
       </div>
       <textarea
         ref={textareaRef}
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="Digite sua mensagem para LyrIA..."
         rows="1"
@@ -83,8 +87,8 @@ const ChatInput = ({
         </button>
       ) : (
         <button
-          onClick={() => handleSend()}
-          disabled={!input.trim() || isListening}
+          onClick={handleLocalSend}
+          disabled={!text.trim() || isListening}
           className="send-btn"
         >
           <FiSend />

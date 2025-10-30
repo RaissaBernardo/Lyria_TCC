@@ -47,7 +47,6 @@ function ChatContent() {
   const { user, isAuthenticated } = useAuth();
   const { addToast } = useToast();
   const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
   const [isBotTyping, setIsBotTyping] = useState(false);
   const [isHistoryVisible, setHistoryVisible] = useState(false);
   const requestCancellationRef = useRef({ cancel: () => {} });
@@ -151,14 +150,13 @@ function ChatContent() {
   };
 
   const handleSend = async (textToSend) => {
-    const trimmedInput = (typeof textToSend === "string" ? textToSend : input).trim();
+    const trimmedInput = textToSend.trim();
     if (!trimmedInput || isBotTyping || isListening) return;
 
     requestCancellationRef.current?.cancel();
 
     const userMessage = { id: crypto.randomUUID(), sender: "user", text: trimmedInput };
     setMessages((prev) => [...prev, userMessage]);
-    setInput("");
     setIsBotTyping(true);
 
     try {
@@ -166,13 +164,13 @@ function ChatContent() {
       requestCancellationRef.current = { cancel: () => controller.abort() };
 
       const response = isAuthenticated && user
-        ? await postMessage(trimmedInput, null, controller.signal) // Sempre envia null para o backend baseado em sessão criar/continuar a conversa
+        ? await postMessage(trimmedInput, null, controller.signal)
         : await conversarAnonimo(trimmedInput, selectedPersona, controller.signal);
 
       if (controller.signal.aborted) return;
     
       if (isAuthenticated) {
-        fetchConversations(); // Recarrega o histórico para refletir a nova mensagem
+        fetchConversations();
       }
 
       const botMessage = { id: crypto.randomUUID(), sender: "bot", text: response.resposta, animate: true };
@@ -197,14 +195,10 @@ function ChatContent() {
     const audioConfig = AudioConfig.fromDefaultMicrophoneInput();
     const recognizer = new SpeechRecognizer(speechConfig, audioConfig);
     setIsListening(true);
-    setInput("Ouvindo... pode falar.");
     recognizer.recognizeOnceAsync(
       (result) => {
         if (result.reason === ResultReason.RecognizedSpeech) {
           handleSend(result.text);
-        } else {
-          setInput("Não consegui entender. Tente novamente.");
-          setTimeout(() => setInput(""), 2000);
         }
         recognizer.close();
         setIsListening(false);
@@ -335,8 +329,6 @@ function ChatContent() {
           )}
         </div>
         <ChatInput
-          input={input}
-          setInput={setInput}
           handleSend={handleSend}
           handleMicClick={handleMicClick}
           isBotTyping={isBotTyping}
