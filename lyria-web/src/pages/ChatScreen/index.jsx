@@ -1,295 +1,380 @@
-/* eslint-disable no-irregular-whitespace */
 import { useState, useEffect, useRef, useCallback } from "react";
 import "./Styles/styles.css";
 import {
-  conversarAnonimo,
-  getConversations,
-  postMessage,
-  getPersonas,
-  putPersona,
-  getPersona,
+  conversarAnonimo,
+  getConversations,
+  postMessage,
+  deleteConversation,
+  getPersonas,
+  putPersona,
+  getPersona,
+  createConversation, 
 } from "../../services/LyriaApi";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import {
-  SpeechConfig,
-  AudioConfig,
-  SpeechRecognizer,
-  SpeechSynthesizer,
-  ResultReason,
+  SpeechConfig,
+  AudioConfig,
+  SpeechRecognizer,
+  SpeechSynthesizer,
+  ResultReason,
 } from "microsoft-cognitiveservices-speech-sdk";
-
 import LoginPrompt from "../../components/LoginPrompt";
-import ConfirmationModal from "../../components/ConfirmationModal";
 import HistoryPanel from "../../components/HistoryPanel";
 import ChatHeader from "../../components/ChatHeader";
 import MessageList from "../../components/MessageList";
 import ChatInput from "../../components/ChatInput";
 import PromptSuggestions from "../../components/PromptSuggestions";
 import SettingsModal from "../../components/SettingsModal";
+import ConfirmationModal from "../../components/ConfirmationModal";
 
 const speechConfig = SpeechConfig.fromSubscription(
-  import.meta.env.VITE_SPEECH_KEY,
-  import.meta.env.VITE_SPEECH_REGION
+  import.meta.env.VITE_SPEECH_KEY,
+  import.meta.env.VITE_SPEECH_REGION
 );
 speechConfig.speechRecognitionLanguage = "pt-BR";
 
 const availableVoices = [
-  { value: "pt-BR-FranciscaNeural", label: "LyrIA" },
-  { value: "pt-BR-BrendaNeural", label: "Brenda" },
-  { value: "pt-BR-GiovanaNeural", label: "Giovana" },
-  { value: "pt-BR-LeticiaNeural", label: "Leticia" },
-  { value: "pt-BR-AntonioNeural", label: "Antonio" },
-  { value: "pt-BR-DonatoNeural", label: "Leonardo" },
+  { value: "pt-BR-FranciscaNeural", label: "LyrIA" },
+  { value: "pt-BR-BrendaNeural", label: "Brenda" },
+  { value: "pt-BR-GiovanaNeural", label: "Giovana" },
+  { value: "pt-BR-LeticiaNeural", label: "Leticia" },
+  { value: "pt-BR-AntonioNeural", label: "Antonio" },
+  { value: "pt-BR-DonatoNeural", label: "Leonardo" },
 ];
 
 function ChatContent() {
-  const { user, isAuthenticated } = useAuth();
-  const { addToast } = useToast();
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
-  const [isBotTyping, setIsBotTyping] = useState(false);
-  const [isHistoryVisible, setHistoryVisible] = useState(false);
-  const requestCancellationRef = useRef({ cancel: () => {} });
-  const [conversations, setConversations] = useState([]);
-  const [currentChatId, setCurrentChatId] = useState(null);
-  const [isListening, setIsListening] = useState(false);
-  const [isSpeechEnabled, setIsSpeechEnabled] = useState(true);
-  const [selectedVoice, setSelectedVoice] = useState(availableVoices[0].value);
-  const [chatBodyAnimationClass, setChatBodyAnimationClass] = useState("fade-in");
-  const [isLoginPromptVisible, setLoginPromptVisible] = useState(false);
-  const [isDeleteModalVisible, setDeleteModalVisible] = useState(false);
-  const [personas, setPersonas] = useState({});
-  const [selectedPersona, setSelectedPersona] = useState("professor");
+  const { user, isAuthenticated } = useAuth();
+  const { addToast } = useToast();
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [isBotTyping, setIsBotTyping] = useState(false);
+  const [isHistoryVisible, setHistoryVisible] = useState(false);
+  const requestCancellationRef = useRef({ cancel: () => {} });
+  const [conversations, setConversations] = useState([]);
+  const [currentChatId, setCurrentChatId] = useState(null);
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeechEnabled, setIsSpeechEnabled] = useState(true);
+  const [selectedVoice, setSelectedVoice] = useState(availableVoices[0].value);
+  const [chatBodyAnimationClass, setChatBodyAnimationClass] = useState("fade-in");
+  const [isLoginPromptVisible, setLoginPromptVisible] = useState(false);
+  const [isDeleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [personas, setPersonas] = useState({});
+  const [selectedPersona, setSelectedPersona] = useState("professor");
   const [isSettingsModalVisible, setSettingsModalVisible] = useState(false);
 
-  useEffect(() => {
-    const fetchPersonas = async () => {
-      try {
-        const response = await getPersonas();
-        setPersonas(response.personas || {});
-      } catch (error) {
-        console.error("Erro ao buscar personas:", error);
-      }
-    };
-    fetchPersonas();
-  }, []);
+  useEffect(() => {
+    const fetchPersonas = async () => {
+      try {
+        const response = await getPersonas();
+        setPersonas(response.personas || {});
+      } catch (error) {
+        console.error("Erro ao buscar personas:", error);
+      }
+    };
+    fetchPersonas();
+  }, []);
 
-  useEffect(() => {
-    const loadUserPersona = async () => {
-      if (isAuthenticated && user && Object.keys(personas).length > 0) {
-        try {
-          const personaResponse = await getPersona();
-          const personaValue = personaResponse?.persona_escolhida || personaResponse;
-          if (personaValue && personas[personaValue]) {
-            setSelectedPersona(personaValue);
-          }
-        } catch (error) {
-          console.error("Erro ao buscar persona do usuário:", error);
-        }
-      }
-    };
-    loadUserPersona();
-  }, [isAuthenticated, user, personas]);
+  useEffect(() => {
+    const loadUserPersona = async () => {
+      if (isAuthenticated && user && Object.keys(personas).length > 0) {
+        try {
+          const personaResponse = await getPersona();
+          const personaValue = personaResponse?.persona_escolhida || personaResponse;
+          if (personaValue && personas[personaValue]) setSelectedPersona(personaValue);
+        } catch (error) {
+          console.error("Erro ao buscar persona do usuário:", error);
+        }
+      }
+    };
+    loadUserPersona();
+  }, [isAuthenticated, user, personas]);
 
-  const fetchConversations = useCallback(async () => {
-    if (isAuthenticated && user) {
-      try {
-        const response = await getConversations();
-        const conversationsWithTitles = (response.conversas || []).map(convo => ({
-          ...convo,
-          id: convo.conversa_id, // Usa o ID real do backend
-          titulo: (convo.pergunta || "Nova conversa").substring(0, 40) + "..."
-        }));
-        setConversations(conversationsWithTitles);
-      } catch (error) {
-        console.error("Erro ao buscar conversas:", error);
-      }
-    } else {
-      setConversations([]);
-    }
-  }, [isAuthenticated, user]);
-
-  useEffect(() => {
-    fetchConversations();
-  }, [isAuthenticated, user, fetchConversations]);
-
-  useEffect(() => {
-    const savedVoice = localStorage.getItem("lyriaVoice");
-    if (savedVoice) setSelectedVoice(savedVoice);
-  }, []);
-
-  useEffect(() => {
-    speechConfig.speechSynthesisVoiceName = selectedVoice;
-  }, [selectedVoice]);
-
-  const stripMarkdown = (text = "") => {
-    return text
-      .replace(/```[\s\S]*?```/g, " ")
-      .replace(/`/g, "").replace(/\*\*/g, "").replace(/\*/g, "")
-      .replace(/#{1,6}\s/g, "").replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
-      .replace(/!\[[^\]]*\]\([^)]+\)/g, " ").trim();
-  };
-
-  const speakResponse = (text) => {
-    if (!isSpeechEnabled) return;
-    const plainText = stripMarkdown(text);
-    const synthesizer = new SpeechSynthesizer(speechConfig);
-    synthesizer.speakTextAsync(
-      plainText,
-      () => synthesizer.close(),
-      (error) => {
-        console.error("Erro na síntese de voz:", error);
-        synthesizer.close();
-      }
-    );
-  };
-
-  const handleSend = async (textToSend) => {
-    const trimmedInput = (typeof textToSend === "string" ? textToSend : input).trim();
-    if (!trimmedInput || isBotTyping || isListening) return;
-
-    requestCancellationRef.current?.cancel();
-
-    const userMessage = { id: crypto.randomUUID(), sender: "user", text: trimmedInput };
-    setMessages((prev) => [...prev, userMessage]);
-    setInput("");
-    setIsBotTyping(true);
-
-    try {
-      const controller = new AbortController();
-      requestCancellationRef.current = { cancel: () => controller.abort() };
-
-      const response = isAuthenticated && user
-        ? await postMessage(trimmedInput, currentChatId, selectedPersona, controller.signal)
-        : await conversarAnonimo(trimmedInput, selectedPersona, controller.signal);
-
-      if (controller.signal.aborted) return;
-    
-      if (isAuthenticated) {
-        fetchConversations(); // Recarrega o histórico para refletir a nova mensagem
-      }
-
-      const botMessage = { id: crypto.randomUUID(), sender: "bot", text: response.resposta, animate: true };
-      setMessages((prev) => [...prev, botMessage]);
-      speakResponse(response.resposta);
-    } catch (err) {
-      if (err.name !== "AbortError") {
-        const errorMessage = { id: crypto.randomUUID(), sender: "bot", text: "Desculpe, ocorreu um erro." };
-        setMessages((prev) => [...prev, errorMessage]);
-        speakResponse(errorMessage.text);
-      }
-    } finally {
-      setIsBotTyping(false);
-    }
-  };
-
-  const handleMicClick = () => {
-    if (isListening) return;
-    const audioConfig = AudioConfig.fromDefaultMicrophoneInput();
-    const recognizer = new SpeechRecognizer(speechConfig, audioConfig);
-    setIsListening(true);
-    setInput("Ouvindo... pode falar.");
-    recognizer.recognizeOnceAsync(
-      (result) => {
-        if (result.reason === ResultReason.RecognizedSpeech) {
-          handleSend(result.text);
-        } else {
-          setInput("Não consegui entender. Tente novamente.");
-          setTimeout(() => setInput(""), 2000);
-        }
-        recognizer.close();
-        setIsListening(false);
-      },
-      () => {
-        setInput("Erro ao acessar o microfone.");
-        recognizer.close();
-        setIsListening(false);
-        setTimeout(() => setInput(""), 2000);
-      }
-    );
-  };
-
-  const startNewChat = () => {
-    requestCancellationRef.current?.cancel();
-    setIsBotTyping(false);
-    setChatBodyAnimationClass("fade-out");
-    setTimeout(() => {
-      setCurrentChatId(null);
-      setMessages([]);
-      setChatBodyAnimationClass("fade-in");
-    }, 500);
-  };
-
-  const loadChat = async (id) => {
-    if (id === currentChatId) return setHistoryVisible(false);
-
-    const conversationToLoad = conversations.find(c => c.id === id);
-    if (!conversationToLoad) {
-        console.error("Não foi possível encontrar a conversa com o ID (índice):", id);
-        return;
+  const fetchConversations = useCallback(async () => {
+    if (!isAuthenticated || !user) return setConversations([]);    
+    try {
+      const response = await getConversations();
+      const conversationsWithIds = (response.conversas || []).map((convo) => ({
+        ...convo,
+        id: convo.conversa_id,
+        titulo: (convo.mensagens[0].pergunta || "Nova conversa").substring(0, 40) + "...",
+      }));
+      
+      console.log("📚 Conversas carregadas:", conversationsWithIds.length);
+      setConversations(conversationsWithIds);
+      
+      if (response.conversa_ativa && !currentChatId && messages.length === 0) {
+        console.log("📌 Conversa ativa detectada:", response.conversa_ativa);
+        setCurrentChatId(response.conversa_ativa);
+        
+        const conversaAtiva = conversationsWithIds.find(c => c.id === response.conversa_ativa);
+        if (conversaAtiva) {
+          const historicalMessages = [
+            { id: crypto.randomUUID(), sender: "user", text: conversaAtiva.mensagens[0].pergunta, animate: false },
+            { id: crypto.randomUUID(), sender: "bot", text: conversaAtiva.mensagens[0].resposta, animate: false },
+          ];
+          setMessages(historicalMessages);
+        }
+      }
+    } catch (error) {
+      console.error("❌ Erro ao buscar conversas:", error);
     }
+  }, [isAuthenticated, user, currentChatId, messages.length]);
 
+  useEffect(() => {
+    fetchConversations();
+  }, [isAuthenticated, user, fetchConversations]);
+
+  useEffect(() => {
+    const savedVoice = localStorage.getItem("lyriaVoice");
+    if (savedVoice) setSelectedVoice(savedVoice);
+  }, []);
+
+  useEffect(() => {
+    speechConfig.speechSynthesisVoiceName = selectedVoice;
+  }, [selectedVoice]);
+
+  const stripMarkdown = (text = "") => {
+    return text
+      .replace(/```[\s\S]*?```/g, " ")
+      .replace(/`/g, "").replace(/\*\*/g, "").replace(/\*/g, "")
+      .replace(/#{1,6}\s/g, "").replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+      .replace(/!\[[^\]]*\]\([^)]+\)/g, " ").trim();
+  };
+
+  const speakResponse = (text) => {
+    if (!isSpeechEnabled) return;
+    const plainText = stripMarkdown(text);
+    const synthesizer = new SpeechSynthesizer(speechConfig);
+    synthesizer.speakTextAsync(
+      plainText,
+      () => synthesizer.close(),
+      (error) => {
+        console.error("Erro na síntese de voz:", error);
+        synthesizer.close();
+      }
+    );
+  };
+
+  const handleSend = async (textToSend) => {
+    const trimmedInput = (typeof textToSend === "string" ? textToSend : input).trim();
+    if (!trimmedInput || isBotTyping || isListening) return;
+    
+    requestCancellationRef.current?.cancel();
+    
+    const userMessage = { id: crypto.randomUUID(), sender: "user", text: trimmedInput };
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+    setIsBotTyping(true);
+    
+    try {
+      const controller = new AbortController();
+      requestCancellationRef.current = { cancel: () => controller.abort() };
+      
+      let response;
+    
+      if (isAuthenticated && user) {
+        let conversaId = currentChatId;
+        
+        if (!conversaId) {
+          console.log("🆕 Criando nova conversa antes de enviar mensagem...");
+          try {
+            const newConversation = await createConversation();
+            conversaId = newConversation.conversa_id;
+            setCurrentChatId(conversaId);
+            console.log("✅ Nova conversa criada:", conversaId);
+          } catch (error) {
+            console.error("❌ Erro ao criar conversa:", error);
+            throw new Error("Não foi possível criar uma nova conversa");
+          }
+        }
+        
+        response = await postMessage(trimmedInput, conversaId, controller.signal);
+        
+        if (response.conversa_id && response.conversa_id !== conversaId) {
+          setCurrentChatId(response.conversa_id);
+        }
+        
+        fetchConversations();
+        
+      } else {
+        response = await conversarAnonimo(trimmedInput, selectedPersona, controller.signal);
+      }
+      
+      if (controller.signal.aborted) return;
+      
+      const botMessage = { 
+        id: crypto.randomUUID(), 
+        sender: "bot", 
+        text: response.resposta, 
+        animate: true 
+      };
+      setMessages((prev) => [...prev, botMessage]);
+      speakResponse(response.resposta);
+      
+    } catch (error) {
+      if (error.name !== "AbortError") {
+        console.error("❌ Erro em handleSend:", error);
+        const errorMessage = { 
+          id: crypto.randomUUID(), 
+          sender: "bot", 
+          text: "Desculpe, ocorreu um erro ao processar sua mensagem." 
+        };
+        setMessages((prev) => [...prev, errorMessage]);
+        speakResponse(errorMessage.text);
+      }
+    } finally {
+      setIsBotTyping(false);
+    }
+  };
+
+  const handleMicClick = () => {
+    if (isListening) return;
+    const audioConfig = AudioConfig.fromDefaultMicrophoneInput();
+    const recognizer = new SpeechRecognizer(speechConfig, audioConfig);
+    setIsListening(true);
+    setInput("Ouvindo... pode falar.");
+    recognizer.recognizeOnceAsync(
+      (result) => {
+        if (result.reason === ResultReason.RecognizedSpeech) handleSend(result.text);
+        else {
+          setInput("Não consegui entender. Tente novamente.");
+          setTimeout(() => setInput(""), 2000);
+        }
+        recognizer.close();
+        setIsListening(false);
+      },
+      () => {
+        setInput("Erro ao acessar o microfone.");
+        recognizer.close();
+        setIsListening(false);
+        setTimeout(() => setInput(""), 2000);
+      }
+    );
+  };
+
+  const startNewChat = async () => {
+    requestCancellationRef.current?.cancel();
+    setIsBotTyping(false);
+    setChatBodyAnimationClass("fade-out");
+    
+    setTimeout(async () => {
+      if (isAuthenticated) {
+        try {
+          const response = await createConversation();
+          setCurrentChatId(response.conversa_id);
+          console.log("✅ Nova conversa criada com ID:", response.conversa_id);
+          
+          await fetchConversations();
+        } catch (error) {
+          console.error("❌ Erro ao criar nova conversa:", error);
+          addToast("Erro ao criar nova conversa", "error");
+          setCurrentChatId(null);
+        }
+      } else {
+        setCurrentChatId(null);
+      }
+      
+      setMessages([]);
+      setChatBodyAnimationClass("fade-in");
+    }, 500);
+  };
+
+  const loadChat = (id) => {
+    console.log(`loadChat id = ${id}`)
+    if (id === currentChatId) return setHistoryVisible(false);
+    
+    const conversation = conversations.find((c) => c.id === id);
+    if (!conversation) return console.error("❌ Conversa não encontrada:", id);
+    
     const historicalMessages = [
-      { id: crypto.randomUUID(), sender: 'user', text: conversationToLoad.pergunta, animate: false },
-      { id: crypto.randomUUID(), sender: 'bot', text: conversationToLoad.resposta, animate: false },
+      { id: crypto.randomUUID(), sender: "user", text: conversation.mensagens[0].pergunta, animate: false },
+      { id: crypto.randomUUID(), sender: "bot", text: conversation.mensagens[0].resposta, animate: false },
     ];
     
-    setCurrentChatId(id);
-    setMessages(historicalMessages);
+    setCurrentChatId(id);
+    setMessages(historicalMessages);
     setChatBodyAnimationClass("fade-in");
-    setHistoryVisible(false);
-  };
+    setHistoryVisible(false);
+  };
 
-  const deleteChat = (id) => {
-    addToast("Função indisponível. Requer ajuste no backend.", "warning");
-    console.warn(`Tentativa de deletar conversa com ID (índice) ${id}. A API atual não suporta esta ação.`);
-  };
+  const deleteChat = async (id) => {
+    console.log(`🗑️ Tentando deletar conversa com ID: ${id}`);
+    
+    try {
+      const response = await deleteConversation(id);
 
-  const handleConfirmDelete = async () => {
-    // A lógica de confirmação está desativada até que a API seja ajustada.
-  };
+      if (response.sucesso) {
+        console.log(`✅ Conversa ${id} deletada com sucesso`);
+        
+        setConversations((prev) => prev.filter((convo) => convo.id !== id));
+        addToast('Conversa deletada com sucesso!', 'success');
 
-  const handleHistoryClick = () => {
-    if (!isAuthenticated) setLoginPromptVisible(true);
-    else setHistoryVisible((prev) => !prev);
-  };
+        if (currentChatId === id) {
+          console.log(`📌 Conversa deletada era a ativa, iniciando nova...`);
+          startNewChat();
+        }
+      } else {
+        console.error(`❌ Falha ao deletar: ${response.erro}`);
+        addToast(response.erro || 'Falha ao excluir conversa', 'error');
+      }
+    } catch (error) {
+      console.error(`❌ Erro ao deletar conversa:`, error);
+      addToast(error.message || 'Ocorreu um erro ao excluir a conversa', 'error');
+    }
+  };
 
-  const handleNewChatClick = () => {
-    if (!isAuthenticated) setLoginPromptVisible(true);
-    else startNewChat();
-  };
+  const handleHistoryClick = () => {
+    if (!isAuthenticated) setLoginPromptVisible(true);
+    else setHistoryVisible((p) => !p);
+  };
 
-  const handleVoiceChange = (event) => {
-    const newVoice = event.target.value;
-    setSelectedVoice(newVoice);
-    localStorage.setItem("lyriaVoice", newVoice);
-    addToast("Voz atualizada!", "success");
-  };
+  const handleNewChatClick = () => {
+    if (!isAuthenticated) setLoginPromptVisible(true);
+    else startNewChat();
+  };
 
-  const handlePersonaChange = async (event) => {
-    const newPersona = event.target.value;
-    setSelectedPersona(newPersona);
-    if (isAuthenticated) {
-      try {
-        await putPersona(newPersona);
-        addToast("Persona atualizada com sucesso!", "success");
-      } catch {
-        addToast("Erro ao atualizar a persona.", "error");
-      }
-    }
-  };
+  const handleVoiceChange = (e) => {
+    const newVoice = e.target.value;
+    setSelectedVoice(newVoice);
+    localStorage.setItem("lyriaVoice", newVoice);
+    addToast("Voz atualizada!", "success");
+  };
 
-  return (
-    <>
-      {isLoginPromptVisible && <LoginPrompt onDismiss={() => setLoginPromptVisible(false)} showContinueAsGuest={false} />}
-      <ConfirmationModal
-        isOpen={isDeleteModalVisible}
-        onClose={() => setDeleteModalVisible(false)}
-        onConfirm={handleConfirmDelete}
-        title="Confirmar Exclusão"
-        message="Você tem certeza que deseja apagar esta conversa? Esta ação não pode ser desfeita."
-      />
+  const handlePersonaChange = async (event) => {
+    const newPersona = event.target.value;
+    setSelectedPersona(newPersona);
+    if (isAuthenticated) {
+      try {
+        await putPersona(newPersona);
+        addToast("Persona atualizada com sucesso!", "success");
+      } catch {
+        addToast("Erro ao atualizar a persona.", "error");
+      }
+    }
+  };
+
+  const handleConfirmDelete = () => {
+    setDeleteModalVisible(false);
+  };
+
+  return (
+    <>
+      {isLoginPromptVisible && (
+        <LoginPrompt 
+          onDismiss={() => setLoginPromptVisible(false)} 
+          showContinueAsGuest={false} 
+        />
+      )}
+      
+      <ConfirmationModal
+        isOpen={isDeleteModalVisible}
+        onClose={() => setDeleteModalVisible(false)}
+        onConfirm={handleConfirmDelete}
+        title="Confirmar Exclusão"
+        message="Você tem certeza que deseja apagar esta conversa? Esta ação não pode ser desfeita."
+      />
+      
       <SettingsModal
         isOpen={isSettingsModalVisible}
         onClose={() => setSettingsModalVisible(false)}
@@ -300,47 +385,51 @@ function ChatContent() {
         selectedVoice={selectedVoice}
         onVoiceChange={handleVoiceChange}
       />
-      <HistoryPanel
-        isVisible={isHistoryVisible}
-        onClose={() => setHistoryVisible(false)}
-        conversations={conversations}
-        loadChat={loadChat}
-        deleteChat={deleteChat}
-      />
-      <main className={`galaxy-chat-area ${isHistoryVisible ? "history-open" : ""}`}>
-        <ChatHeader
-          onHistoryClick={handleHistoryClick}
-          isSpeechEnabled={isSpeechEnabled}
-          onToggleSpeech={() => setIsSpeechEnabled((p) => !p)}
-          onNewChatClick={handleNewChatClick}
+      
+      <HistoryPanel
+        isVisible={isHistoryVisible}
+        onClose={() => setHistoryVisible(false)}
+        conversations={conversations}
+        loadChat={loadChat}
+        deleteChat={deleteChat}
+      />
+      
+      <main className={`galaxy-chat-area ${isHistoryVisible ? "history-open" : ""}`}>
+        <ChatHeader
+          onHistoryClick={handleHistoryClick}
+          isSpeechEnabled={isSpeechEnabled}
+          onToggleSpeech={() => setIsSpeechEnabled((p) => !p)}
+          onNewChatClick={handleNewChatClick}
           onSettingsClick={() => setSettingsModalVisible(true)}
-        />
-        <div className={`galaxy-chat-body ${chatBodyAnimationClass}`}>
-          {messages.length === 0 ? (
-            <PromptSuggestions onSuggestionClick={handleSend} />
-          ) : (
-            <MessageList messages={messages} isBotTyping={isBotTyping} />
-          )}
-        </div>
-        <ChatInput
-          input={input}
-          setInput={setInput}
-          handleSend={handleSend}
-          handleMicClick={handleMicClick}
-          isBotTyping={isBotTyping}
-          isListening={isListening}
-        />
-      </main>
-    </>
-  );
+        />
+        
+        <div className={`galaxy-chat-body ${chatBodyAnimationClass}`}>
+          {messages.length === 0 ? (
+            <PromptSuggestions onSuggestionClick={handleSend} />
+          ) : (
+            <MessageList messages={messages} isBotTyping={isBotTyping} />
+          )}
+        </div>
+        
+        <ChatInput
+          input={input}
+          setInput={setInput}
+          handleSend={handleSend}
+          handleMicClick={handleMicClick}
+          isBotTyping={isBotTyping}
+          isListening={isListening}
+        />
+      </main>
+    </>
+  );
 }
 
 function Chatbot() {
-  return (
-    <div className="galaxy-chat-container">
-      <ChatContent />
-    </div>
-  );
+  return (
+    <div className="galaxy-chat-container">
+      <ChatContent />
+    </div>
+  );
 }
 
 export default Chatbot;

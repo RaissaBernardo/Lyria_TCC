@@ -67,6 +67,18 @@ export const updateUserProfile = async (userId, formData) => {
 };
 
 // ------------------- Conversas -------------------
+export const createConversation = async () => {
+  console.log("API: Criando conversa...")
+  try {
+    const response = await api.post('/Lyria/conversas');
+    console.log("API: Sucesso ao criar conversa")
+    return response.data
+  } catch (error) {
+    console.error("API: Erro ao criar conversa: ", error)
+    throw error;
+  }
+};
+
 export const deleteConversation = async (conversationId) => {
   console.log("API: Tentando deletar conversa com ID:", conversationId);
   try {
