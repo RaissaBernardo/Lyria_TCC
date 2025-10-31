@@ -63,10 +63,6 @@ const ChatInput = ({
             </button>
           </div>
         )}
-        <FiPaperclip
-          className="input-icon"
-          onClick={() => setAttachmentMenuVisible(!isAttachmentMenuVisible)}
-        />
       </div>
       <textarea
         ref={textareaRef}

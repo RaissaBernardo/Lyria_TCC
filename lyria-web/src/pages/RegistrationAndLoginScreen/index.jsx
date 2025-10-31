@@ -8,9 +8,10 @@ import {
   FaVolumeUp,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { register, getPersonas } from "../../services/LyriaApi";
+import { register, getPersonas, esqueciMinhaSenha } from "../../services/LyriaApi";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
+import ForgotPasswordModal from "../../components/ForgotPasswordModal";
 import "./Styles/styles.css";
 
 import {
@@ -60,6 +61,7 @@ function LoginRegisterPage() {
   const [animationClass, setAnimationClass] = useState("fade-in");
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
+  const [isForgotPasswordModalOpen, setForgotPasswordModalOpen] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
   const { addToast } = useToast();
@@ -85,7 +87,7 @@ function LoginRegisterPage() {
         try {
           const response = await getPersonas();
           setPersonas(response.personas || {});
-        } catch (error) {
+        } catch {
           addToast("Não foi possível carregar as personas.", "error");
         }
       };
@@ -138,6 +140,10 @@ function LoginRegisterPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleForgotPassword = () => {
+    setForgotPasswordModalOpen(true);
   };
 
   const handleRegister = async () => {
@@ -367,9 +373,9 @@ function LoginRegisterPage() {
           {passwordVisible ? <FaEyeSlash /> : <FaEye />}
         </span>
       </div>
-      <a href="#" className="forgot-password">
+      <button type="button" onClick={handleForgotPassword} className="forgot-password">
         Esqueceu sua senha?
-      </a>
+      </button>
       <button type="submit" className="submit-btn" disabled={loading}>
         {loading ? "ENTRANDO..." : "ENTRAR"}
       </button>
@@ -378,6 +384,10 @@ function LoginRegisterPage() {
 
   return (
     <div className="auth-body">
+      <ForgotPasswordModal
+        isOpen={isForgotPasswordModalOpen}
+        onClose={() => setForgotPasswordModalOpen(false)}
+      />
       <div
         className={`form-container ${
           isLogin ? "login-active" : "register-active"
