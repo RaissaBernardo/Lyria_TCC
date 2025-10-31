@@ -128,7 +128,7 @@ function LoginRegisterPage() {
       const response = await login({ email, senha_hash: senha });
       if (response.status === "ok") {
         addToast("Login bem-sucedido! Redirecionando...", "success");
-        navigate("/chat");
+        navigate("/");
       } else {
         addToast(response.erro || "Erro ao fazer login.", "error");
       }

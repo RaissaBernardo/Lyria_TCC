@@ -91,8 +91,7 @@ function ChatContent() {
   }, [isAuthenticated, user, personas]);
 
   const fetchConversations = useCallback(async () => {
-    if (!isAuthenticated || !user) return setConversations([]);
-    
+    if (!isAuthenticated || !user) return setConversations([]);    
     try {
       const response = await getConversations();
       const conversationsWithIds = (response.conversas || []).map((convo) => ({
