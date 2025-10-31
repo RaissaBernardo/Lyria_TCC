@@ -97,7 +97,8 @@ function ChatContent() {
       const response = await getConversations();
       const conversationsWithIds = (response.conversas || []).map((convo) => ({
         ...convo,
-        titulo: (convo.pergunta || "Nova conversa").substring(0, 40) + "...",
+        id: convo.conversa_id,
+        titulo: (convo.mensagens[0].pergunta || "Nova conversa").substring(0, 40) + "...",
       }));
       
       console.log("📚 Conversas carregadas:", conversationsWithIds.length);
@@ -110,8 +111,8 @@ function ChatContent() {
         const conversaAtiva = conversationsWithIds.find(c => c.id === response.conversa_ativa);
         if (conversaAtiva) {
           const historicalMessages = [
-            { id: crypto.randomUUID(), sender: "user", text: conversaAtiva.pergunta, animate: false },
-            { id: crypto.randomUUID(), sender: "bot", text: conversaAtiva.resposta, animate: false },
+            { id: crypto.randomUUID(), sender: "user", text: conversaAtiva.mensagens[0].pergunta, animate: false },
+            { id: crypto.randomUUID(), sender: "bot", text: conversaAtiva.mensagens[0].resposta, animate: false },
           ];
           setMessages(historicalMessages);
         }
@@ -281,14 +282,15 @@ function ChatContent() {
   };
 
   const loadChat = (id) => {
+    console.log(`loadChat id = ${id}`)
     if (id === currentChatId) return setHistoryVisible(false);
     
     const conversation = conversations.find((c) => c.id === id);
     if (!conversation) return console.error("❌ Conversa não encontrada:", id);
     
     const historicalMessages = [
-      { id: crypto.randomUUID(), sender: "user", text: conversation.pergunta, animate: false },
-      { id: crypto.randomUUID(), sender: "bot", text: conversation.resposta, animate: false },
+      { id: crypto.randomUUID(), sender: "user", text: conversation.mensagens[0].pergunta, animate: false },
+      { id: crypto.randomUUID(), sender: "bot", text: conversation.mensagens[0].resposta, animate: false },
     ];
     
     setCurrentChatId(id);
