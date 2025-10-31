@@ -20,18 +20,24 @@ export const esqueciMinhaSenha = async (data) => {
   return Promise.resolve({ status: "ok" });
 };
 
-export const postMessage = async (pergunta, conversa_id, signal) => {
-  console.log("API: Chamando postMessage", { pergunta, conversa_id });
+export const postMessage = async (pergunta, conversa_id, persona, signal) => {
+  console.log("API: Chamando postMessage", { pergunta, conversa_id, persona });
+
+  // Constrói o corpo da requisição dinamicamente
+  const requestBody = { pergunta, persona };
+  if (conversa_id) {
+    requestBody.conversa_id = conversa_id;
+  }
+
   try {
-    const response = await api.post(
-      "/Lyria/conversar-logado",
-      { pergunta, conversa_id },
-      { signal }
-    );
+    const response = await api.post("/Lyria/conversar-logado", requestBody, {
+      signal,
+    });
     console.log("API: Sucesso em postMessage", response.data);
     return response.data;
   } catch (error) {
-    if (error.name !== "AbortError") console.error("API: Erro em postMessage:", error);
+    if (error.name !== "AbortError")
+      console.error("API: Erro em postMessage:", error);
     throw error;
   }
 };

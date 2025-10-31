@@ -96,17 +96,12 @@ function ChatContent() {
     if (isAuthenticated && user) {
       try {
         const response = await getConversations();
-        
-        // ===== LÓGICA PRINCIPAL PARA GERAR IDs E TÍTULOS =====
-        const conversationsWithIds = (response.conversas || []).map((convo, index) => ({
+        const conversationsWithTitles = (response.conversas || []).map(convo => ({
           ...convo,
-          id: index, // Usa o índice do array como ID único temporário
-          titulo: (convo.pergunta || "Nova conversa").substring(0, 40) + "..." // Cria um título a partir da pergunta
+          id: convo.conversa_id, // Usa o ID real do backend
+          titulo: (convo.pergunta || "Nova conversa").substring(0, 40) + "..."
         }));
-        // =======================================================
-
-        console.log("DEBUG: Conversas com IDs gerados pelo frontend:", conversationsWithIds);
-        setConversations(conversationsWithIds);
+        setConversations(conversationsWithTitles);
       } catch (error) {
         console.error("Erro ao buscar conversas:", error);
       }
@@ -166,7 +161,7 @@ function ChatContent() {
       requestCancellationRef.current = { cancel: () => controller.abort() };
 
       const response = isAuthenticated && user
-        ? await postMessage(trimmedInput, null, controller.signal) // Sempre envia null para o backend baseado em sessão criar/continuar a conversa
+        ? await postMessage(trimmedInput, currentChatId, selectedPersona, controller.signal)
         : await conversarAnonimo(trimmedInput, selectedPersona, controller.signal);
 
       if (controller.signal.aborted) return;
