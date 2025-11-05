@@ -90,7 +90,7 @@ def login():
         session['usuario_email'] = usuario['email']
         session['usuario_nome'] = usuario['nome']
         session['usuario_id'] = usuario['id']
-        
+                
         session.modified = True
         
         print(f"✅ Sessão criada:")
@@ -103,7 +103,8 @@ def login():
             "status": "ok",
             "mensagem": "Login realizado com sucesso",
             "usuario": usuario['nome'],
-            "persona": usuario.get('persona_escolhida')
+            "persona": usuario.get('persona_escolhida'),
+            "conversa_id": None  # Sem conversa inicial
         })
         
         return response
@@ -121,8 +122,11 @@ def criar_nova_conversa_route():
         return jsonify({"erro": "Usuário não está logado"}), 401
     
     try:
-        from banco.banco import criar_nova_conversa
         conversa_id = criar_nova_conversa(usuario)
+        session['conversa_id'] = conversa_id
+        session.modified = True
+        
+        print(f"✅ Nova conversa criada: {conversa_id}")
         return jsonify({"conversa_id": conversa_id, "sucesso": "Nova conversa criada"}), 201
     except Exception as e:
         print(f"❌ Erro ao criar nova conversa: {e}")
@@ -170,6 +174,20 @@ def conversar_logado():
         return jsonify({"erro": "Campo 'pergunta' é obrigatório"}), 400
 
     try:
+        conversa_id_sessao = session.get('conversa_id')
+        
+        if not conversa_id and not conversa_id_sessao:
+            conversa_id = 1
+            print(f"🆕 Primeira conversa do usuário, usando conversa_id: {conversa_id}")
+        elif not conversa_id and conversa_id_sessao:
+            conversa_id = conversa_id_sessao
+            print(f"📌 Usando conversa_id da sessão: {conversa_id}")
+        else:
+            print(f"📌 Usando conversa_id recebido: {conversa_id}")
+        
+        session['conversa_id'] = conversa_id
+        session.modified = True
+        
         print(f"🔍 Buscando persona para usuário: {usuario}")
         persona_tipo = pegarPersonaEscolhida(usuario)
         if not persona_tipo:
@@ -192,7 +210,10 @@ def conversar_logado():
         resposta = perguntar_ollama(pergunta, conversas, memorias, persona_texto, contexto_web)
         conversa_id_retornado = salvarMensagem(usuario, pergunta, resposta, modelo_usado="hf", tokens=None, conversa_id=conversa_id)
 
-        return jsonify({"resposta": resposta, "conversa_id": conversa_id_retornado})  # ✅ Retorna o ID da conversa
+        session['conversa_id'] = conversa_id_retornado
+        session.modified = True
+
+        return jsonify({"resposta": resposta, "conversa_id": conversa_id_retornado})
     except Exception as e:
         print(f"❌ Erro detalhado em conversar_logado: {str(e)}")
         import traceback
@@ -208,7 +229,11 @@ def get_conversas_logado():
 
     try:
         conversas = carregar_conversas(usuario)
-        return jsonify({"conversas": conversas or []})
+        conversa_ativa = session.get('conversa_id')
+        return jsonify({
+            "conversas": conversas or [],
+            "conversa_ativa": conversa_ativa
+        })
     except Exception as e:
         print(f"❌ Erro em get_conversas_logado: {e}")
         return jsonify({"erro": str(e)}), 500
@@ -221,6 +246,12 @@ def remove_conversa_id(id):
     
     try:
         deletou = deleta_conversa(id)
+        
+        if str(session.get('conversa_id')) == str(id):
+            session.pop('conversa_id', None)
+            session.modified = True
+            print(f"🗑️ Conversa ativa {id} removida da sessão")
+        
         return jsonify({"sucesso": "Deletado com sucesso!"})
     except Exception as e:
         print(f"Erro em deletar a conversa")
@@ -337,6 +368,7 @@ def check_session():
             "autenticado": True,
             "usuario": session.get('usuario_nome'),
             "email": usuario,
+            "conversa_id": session.get('conversa_id'),
             "session_id": request.cookies.get('lyria_session', 'Não encontrado')
         })
     return jsonify({
