@@ -105,7 +105,7 @@ function ChatContent() {
       console.log("📚 Conversas carregadas:", conversationsWithIds.length);
       setConversations(conversationsWithIds);
       
-      if (response.conversa_ativa && !currentChatId && messages.length === 0) {
+      if (response.conversa_ativa && !currentChatId) {
         console.log("📌 Conversa ativa detectada:", response.conversa_ativa);
         setCurrentChatId(response.conversa_ativa);
         
@@ -121,7 +121,7 @@ function ChatContent() {
     } catch (error) {
       console.error("❌ Erro ao buscar conversas:", error);
     }
-  }, [isAuthenticated, user, currentChatId, messages.length]);
+  }, [isAuthenticated, user, currentChatId]);
 
   useEffect(() => {
     fetchConversations();
@@ -196,8 +196,6 @@ function ChatContent() {
         if (response.conversa_id && response.conversa_id !== conversaId) {
           setCurrentChatId(response.conversa_id);
         }
-        
-        fetchConversations();
         
       } else {
         response = await conversarAnonimo(trimmedInput, selectedPersona, controller.signal);
