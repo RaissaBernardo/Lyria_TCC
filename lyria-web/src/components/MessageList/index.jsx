@@ -1,25 +1,16 @@
 import { FiUser, FiCopy, FiCheck } from "react-icons/fi";
 import { RiRobot2Line } from "react-icons/ri";
 import AnimatedBotMessage from "../AnimatedBotMessage";
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 
-const MessageList = ({ messages, isBotTyping }) => {
+const MessageList = ({ messages, isBotTyping, onTyping }) => {
   const [copiedId, setCopiedId] = useState(null);
-  const messagesEndRef = useRef(null);
 
   const handleCopyToClipboard = (text, id) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
   };
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, isBotTyping]);
 
   return (
     <>
@@ -32,7 +23,11 @@ const MessageList = ({ messages, isBotTyping }) => {
             <span className="sender-name">
               {msg.sender === "bot" ? "LyrIA" : "Você"}
             </span>
-            <AnimatedBotMessage fullText={msg.text} animate={msg.animate} />
+            <AnimatedBotMessage
+              fullText={msg.text}
+              animate={msg.animate}
+              onTyping={onTyping}
+            />
             {msg.sender === "bot" && (
               <button
                 className="copy-btn"
@@ -59,7 +54,6 @@ const MessageList = ({ messages, isBotTyping }) => {
           </div>
         </div>
       )}
-      <div ref={messagesEndRef} />
     </>
   );
 };

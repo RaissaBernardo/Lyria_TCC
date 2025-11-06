@@ -51,6 +51,8 @@ function ChatContent() {
   const [isBotTyping, setIsBotTyping] = useState(false);
   const [isHistoryVisible, setHistoryVisible] = useState(false);
   const requestCancellationRef = useRef({ cancel: () => {} });
+  const chatContainerRef = useRef(null);
+  const [userHasScrolled, setUserHasScrolled] = useState(false);
   const [conversations, setConversations] = useState([]);
   const [currentChatId, setCurrentChatId] = useState(null);
   const [isListening, setIsListening] = useState(false);
@@ -358,6 +360,27 @@ function ChatContent() {
     setDeleteModalVisible(false);
   };
 
+  const scrollToBottom = useCallback(() => {
+    if (chatContainerRef.current && !userHasScrolled) {
+      const { scrollHeight, clientHeight } = chatContainerRef.current;
+      chatContainerRef.current.scrollTop = scrollHeight - clientHeight;
+    }
+  }, [userHasScrolled]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isBotTyping, scrollToBottom]);
+
+  const handleScroll = () => {
+    const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
+    const atBottom = scrollHeight - scrollTop <= clientHeight + 50;
+    setUserHasScrolled(!atBottom);
+  };
+
+  const handleTyping = () => {
+    scrollToBottom();
+  };
+
   return (
     <>
       {isLoginPromptVisible && (
@@ -403,11 +426,19 @@ function ChatContent() {
           onSettingsClick={() => setSettingsModalVisible(true)}
         />
         
-        <div className={`galaxy-chat-body ${chatBodyAnimationClass}`}>
+        <div
+          className={`galaxy-chat-body ${chatBodyAnimationClass}`}
+          ref={chatContainerRef}
+          onScroll={handleScroll}
+        >
           {messages.length === 0 ? (
             <PromptSuggestions onSuggestionClick={handleSend} />
           ) : (
-            <MessageList messages={messages} isBotTyping={isBotTyping} />
+            <MessageList
+              messages={messages}
+              isBotTyping={isBotTyping}
+              onTyping={handleTyping}
+            />
           )}
         </div>
         

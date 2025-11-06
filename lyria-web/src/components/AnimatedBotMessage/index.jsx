@@ -3,12 +3,13 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import CodeBlock from "../CodeBlock"; // Import the new component
 
-function AnimatedBotMessage({ fullText, animate = true }) {
+function AnimatedBotMessage({ fullText, animate = true, onTyping }) {
   const [text, setText] = useState(animate ? "" : fullText);
 
   useEffect(() => {
     if (!animate) {
       setText(fullText);
+      if (onTyping) onTyping();
       return;
     }
 
@@ -18,6 +19,7 @@ function AnimatedBotMessage({ fullText, animate = true }) {
         return;
       }
       setText(fullText.slice(0, currentIndex));
+      if (onTyping) onTyping();
       timeoutId = setTimeout(() => {
         typeCharacter(currentIndex + 1);
       }, 25);
@@ -26,7 +28,7 @@ function AnimatedBotMessage({ fullText, animate = true }) {
     typeCharacter(0);
 
     return () => clearTimeout(timeoutId);
-  }, [fullText, animate]);
+  }, [fullText, animate, onTyping]);
 
   return (
     <div className="message bot message-animated">
