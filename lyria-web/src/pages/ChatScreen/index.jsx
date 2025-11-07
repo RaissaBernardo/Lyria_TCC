@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import "./Styles/styles.css";
 import {
   conversarAnonimo,
@@ -45,13 +46,17 @@ const availableVoices = [
 
 function ChatContent() {
   const { user, isAuthenticated } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
   const { addToast } = useToast();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isBotTyping, setIsBotTyping] = useState(false);
   const [isHistoryVisible, setHistoryVisible] = useState(false);
+  const [isStartingNewChat, setIsStartingNewChat] = useState(false);
   const requestCancellationRef = useRef({ cancel: () => {} });
   const recognizerRef = useRef(null);
+  const isNewChatFlow = useRef(false);
   const chatBodyRef = useRef(null);
   const [conversations, setConversations] = useState([]);
   const [currentChatId, setCurrentChatId] = useState(null);
@@ -106,7 +111,10 @@ function ChatContent() {
   }, [isAuthenticated, user, personas]);
 
   const fetchConversations = useCallback(async () => {
-    if (!isAuthenticated || !user) return setConversations([]);    
+    if (!isAuthenticated || !user) {
+      setConversations([]);
+      return;
+    }
     try {
       const response = await getConversations();
       const conversationsWithIds = (response.conversas || []).map((convo) => ({
@@ -114,14 +122,10 @@ function ChatContent() {
         id: convo.conversa_id,
         titulo: (convo.mensagens[0].pergunta || "Nova conversa").substring(0, 40) + "...",
       }));
-      
-      console.log("📚 Conversas carregadas:", conversationsWithIds.length);
       setConversations(conversationsWithIds);
-      
-      if (response.conversa_ativa && !currentChatId && messages.length === 0) {
-        console.log("📌 Conversa ativa detectada:", response.conversa_ativa);
+
+      if (response.conversa_ativa && !currentChatId && messages.length === 0 && !isNewChatFlow.current) {
         setCurrentChatId(response.conversa_ativa);
-        
         const conversaAtiva = conversationsWithIds.find(c => c.id === response.conversa_ativa);
         if (conversaAtiva) {
           const historicalMessages = [
@@ -137,8 +141,13 @@ function ChatContent() {
   }, [isAuthenticated, user, currentChatId, messages.length]);
 
   useEffect(() => {
-    fetchConversations();
-  }, [isAuthenticated, user, fetchConversations]);
+    if (location.state?.newChat) {
+      startNewChat();
+      navigate(location.pathname, { replace: true, state: {} });
+    } else if (isAuthenticated && user) {
+      fetchConversations();
+    }
+  }, [isAuthenticated, user, location.state]);
 
   useEffect(() => {
     const savedVoice = localStorage.getItem("lyriaVoice");
@@ -341,17 +350,19 @@ function ChatContent() {
   };
 
   const startNewChat = async () => {
+    isNewChatFlow.current = true;
+    setIsStartingNewChat(true);
     requestCancellationRef.current?.cancel();
     setIsBotTyping(false);
     setChatBodyAnimationClass("fade-out");
-    
+
     setTimeout(async () => {
+      setMessages([]);
       if (isAuthenticated) {
         try {
           const response = await createConversation();
           setCurrentChatId(response.conversa_id);
           console.log("✅ Nova conversa criada com ID:", response.conversa_id);
-          
           await fetchConversations();
         } catch (error) {
           console.error("❌ Erro ao criar nova conversa:", error);
@@ -361,10 +372,14 @@ function ChatContent() {
       } else {
         setCurrentChatId(null);
       }
-      
-      setMessages([]);
       setChatBodyAnimationClass("fade-in");
-    }, 500);
+      
+      // Reset the flag after the new chat is set up
+      setTimeout(() => {
+        isNewChatFlow.current = false;
+        setIsStartingNewChat(false);
+      }, 20); 
+    }, 200);
   };
 
   const loadChat = (id) => {
@@ -499,10 +514,10 @@ function ChatContent() {
         />
         
         <div ref={chatBodyRef} className={`galaxy-chat-body ${chatBodyAnimationClass}`}>
-          {messages.length === 0 ? (
+          {messages.length === 0 && !isStartingNewChat ? (
             <PromptSuggestions onSuggestionClick={handleSend} />
           ) : (
-            <MessageList messages={messages} isBotTyping={isBotTyping} />
+            <MessageList messages={messages} isBotTyping={isBotTyping} user={user} />
           )}
         </div>
         

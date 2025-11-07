@@ -92,7 +92,7 @@ function InitialScreen() {
     if (isAuthenticated) {
       console.log('[InitialScreen] ➡️  Redirecionando para /chat (usuário autenticado)');
       console.log('[InitialScreen] Usuário:', user?.nome);
-      navigate('/chat');
+      navigate('/chat', { state: { newChat: true } });
     } else {
       console.log('[InitialScreen] 🔒 Exibindo prompt de login (usuário não autenticado)');
       setLoginPromptVisible(true);

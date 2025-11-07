@@ -3,7 +3,7 @@ import { RiRobot2Line } from "react-icons/ri";
 import AnimatedBotMessage from "../AnimatedBotMessage";
 import { useState, useEffect, useRef } from "react";
 
-const MessageList = ({ messages, isBotTyping }) => {
+const MessageList = ({ messages, isBotTyping, user }) => {
   const [copiedId, setCopiedId] = useState(null);
   const messagesEndRef = useRef(null);
 
@@ -26,7 +26,13 @@ const MessageList = ({ messages, isBotTyping }) => {
       {messages.map((msg, index) => (
         <div key={msg.id || index} className={`message-wrapper ${msg.sender}`}>
           <div className="avatar-icon">
-            {msg.sender === "bot" ? <RiRobot2Line /> : <FiUser />}
+            {msg.sender === "bot" ? (
+              <RiRobot2Line />
+            ) : user?.nome ? (
+              user.nome.charAt(0).toUpperCase()
+            ) : (
+              <FiUser />
+            )}
           </div>
           <div className="message-content">
             <span className="sender-name">
