@@ -51,10 +51,12 @@ function ChatContent() {
   const [isBotTyping, setIsBotTyping] = useState(false);
   const [isHistoryVisible, setHistoryVisible] = useState(false);
   const requestCancellationRef = useRef({ cancel: () => {} });
+  const recognizerRef = useRef(null);
+  const chatBodyRef = useRef(null);
   const [conversations, setConversations] = useState([]);
   const [currentChatId, setCurrentChatId] = useState(null);
   const [isListening, setIsListening] = useState(false);
-  const [isSpeechEnabled, setIsSpeechEnabled] = useState(true);
+  const [isSpeechEnabled, setIsSpeechEnabled] = useState(false);
   const [selectedVoice, setSelectedVoice] = useState(availableVoices[0].value);
   const [chatBodyAnimationClass, setChatBodyAnimationClass] = useState("fade-in");
   const [isLoginPromptVisible, setLoginPromptVisible] = useState(false);
@@ -62,6 +64,7 @@ function ChatContent() {
   const [personas, setPersonas] = useState({});
   const [selectedPersona, setSelectedPersona] = useState("professor");
   const [isSettingsModalVisible, setSettingsModalVisible] = useState(false);
+  const [isPageVisible, setIsPageVisible] = useState(true);
 
   useEffect(() => {
     const fetchPersonas = async () => {
@@ -73,6 +76,18 @@ function ChatContent() {
       }
     };
     fetchPersonas();
+  }, []);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      setIsPageVisible(document.visibilityState === "visible");
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, []);
 
   useEffect(() => {
@@ -134,6 +149,31 @@ function ChatContent() {
     speechConfig.speechSynthesisVoiceName = selectedVoice;
   }, [selectedVoice]);
 
+  useEffect(() => {
+    const chatBody = chatBodyRef.current;
+    if (!chatBody) return;
+
+    const scrollToBottom = () => {
+      chatBody.scrollTop = chatBody.scrollHeight;
+    };
+
+    scrollToBottom();
+
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.type === 'childList') {
+          scrollToBottom();
+        }
+      }
+    });
+
+    observer.observe(chatBody, { childList: true, subtree: true });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [messages]);
+
   const stripMarkdown = (text = "") => {
     return text
       .replace(/```[\s\S]*?```/g, " ")
@@ -143,7 +183,12 @@ function ChatContent() {
   };
 
   const speakResponse = (text) => {
-    if (!isSpeechEnabled) return;
+    if (!isSpeechEnabled || !isPageVisible) return;
+
+    if (messages.length === 1 && text.toLowerCase().includes("olá")) {
+      return;
+    }
+
     const plainText = stripMarkdown(text);
     const synthesizer = new SpeechSynthesizer(speechConfig);
     synthesizer.speakTextAsync(
@@ -229,26 +274,68 @@ function ChatContent() {
   };
 
   const handleMicClick = () => {
-    if (isListening) return;
+    if (!isPageVisible) return;
+    if (isListening) {
+      if (recognizerRef.current) {
+        recognizerRef.current.stopContinuousRecognitionAsync(
+          () => {
+            console.log("Reconhecimento parado com sucesso.");
+            setIsListening(false);
+            if (input.trim() && input !== "Ouvindo... pode falar.") {
+              handleSend(input);
+            }
+          },
+          (err) => {
+            console.error("Erro ao parar o reconhecimento:", err);
+            setIsListening(false);
+          }
+        );
+      }
+      return;
+    }
+
     const audioConfig = AudioConfig.fromDefaultMicrophoneInput();
     const recognizer = new SpeechRecognizer(speechConfig, audioConfig);
+    recognizerRef.current = recognizer;
+
     setIsListening(true);
     setInput("Ouvindo... pode falar.");
-    recognizer.recognizeOnceAsync(
-      (result) => {
-        if (result.reason === ResultReason.RecognizedSpeech) handleSend(result.text);
-        else {
-          setInput("Não consegui entender. Tente novamente.");
-          setTimeout(() => setInput(""), 2000);
-        }
-        recognizer.close();
-        setIsListening(false);
-      },
-      () => {
-        setInput("Erro ao acessar o microfone.");
-        recognizer.close();
-        setIsListening(false);
+
+    recognizer.recognizing = (s, e) => {
+      setInput(e.result.text);
+    };
+
+    recognizer.recognized = (s, e) => {
+      if (e.result.reason === ResultReason.RecognizedSpeech) {
+        handleSend(e.result.text);
+        setInput("");
+      } else if (e.result.reason === ResultReason.NoMatch) {
+        setInput("Não consegui entender. Tente novamente.");
         setTimeout(() => setInput(""), 2000);
+      }
+    };
+
+    recognizer.canceled = (s, e) => {
+      console.log(`CANCELED: Reason=${e.reason}`);
+      setIsListening(false);
+      recognizer.stopContinuousRecognitionAsync();
+    };
+
+    recognizer.sessionStopped = (s, e) => {
+      console.log("\n    Session stopped event.");
+      setIsListening(false);
+      recognizer.stopContinuousRecognitionAsync();
+    };
+
+    recognizer.startContinuousRecognitionAsync(
+      () => {
+        console.log("Reconhecimento iniciado.");
+      },
+      (err) => {
+        console.error(`Error starting recognition: ${err}`);
+        setInput("Erro ao acessar o microfone.");
+        setIsListening(false);
+        recognizer.close();
       }
     );
   };
@@ -334,6 +421,14 @@ function ChatContent() {
     else startNewChat();
   };
 
+  const handleSettingsClick = () => {
+    if (!isAuthenticated) {
+      setLoginPromptVisible(true);
+    } else {
+      setSettingsModalVisible(true);
+    }
+  };
+
   const handleVoiceChange = (e) => {
     const newVoice = e.target.value;
     setSelectedVoice(newVoice);
@@ -400,10 +495,10 @@ function ChatContent() {
           isSpeechEnabled={isSpeechEnabled}
           onToggleSpeech={() => setIsSpeechEnabled((p) => !p)}
           onNewChatClick={handleNewChatClick}
-          onSettingsClick={() => setSettingsModalVisible(true)}
+          onSettingsClick={handleSettingsClick}
         />
         
-        <div className={`galaxy-chat-body ${chatBodyAnimationClass}`}>
+        <div ref={chatBodyRef} className={`galaxy-chat-body ${chatBodyAnimationClass}`}>
           {messages.length === 0 ? (
             <PromptSuggestions onSuggestionClick={handleSend} />
           ) : (
