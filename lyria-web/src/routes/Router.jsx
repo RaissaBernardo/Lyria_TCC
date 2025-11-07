@@ -15,7 +15,7 @@ export default function AppRouter() {
           <Route path="/" element={<AnimatedPage><Home /></AnimatedPage>} />
           <Route path="/loading" element={<LoadingScreen />} />
           <Route path="/RegistrationAndLogin" element={<RegistrationAndLogin />}/>
-          <Route path="/chat" element={<AnimatedPage><Chat /></AnimatedPage>} />
+          <Route path="/chat" element={<Chat />} />
           <Route path="/profile" element={<AnimatedPage><Profile /></AnimatedPage>} />
         </Route>
       </Routes>
