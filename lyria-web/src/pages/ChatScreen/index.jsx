@@ -160,7 +160,9 @@ function ChatContent() {
   }, [selectedVoice]);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    setTimeout(() => {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
   }, [messages]);
 
   const stripMarkdown = (text = "") => {
