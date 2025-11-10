@@ -12,7 +12,9 @@ import { register, getPersonas, esqueciMinhaSenha } from "../../services/LyriaAp
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import ForgotPasswordModal from "../../components/ForgotPasswordModal";
+import { validatePassword, validateConfirmPassword } from "./validations";
 import "./Styles/styles.css";
+import "./Styles/errors.css";
 
 import {
   SpeechConfig,
@@ -71,6 +73,8 @@ function LoginRegisterPage() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
+  const [passwordErrors, setPasswordErrors] = useState([]);
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
 
   // State for step 2
   const [personas, setPersonas] = useState({});
@@ -105,16 +109,27 @@ function LoginRegisterPage() {
   };
 
   const handleNextStep = () => {
-    // Validação dos campos da primeira etapa
+    const passwordValidationErrors = validatePassword(senha);
+    setPasswordErrors(passwordValidationErrors);
+
+    const confirmPasswordValidationError = validateConfirmPassword(
+      senha,
+      confirmarSenha
+    );
+    setConfirmPasswordError(confirmPasswordValidationError);
+
+    if (
+      passwordValidationErrors.length > 0 ||
+      confirmPasswordValidationError
+    ) {
+      return;
+    }
+
     if (!nome.trim() || !email.trim() || !senha.trim()) {
       addToast("Por favor, preencha todos os campos.", "error");
       return;
     }
-    if (senha !== confirmarSenha) {
-      addToast("As senhas não coincidem.", "error");
-      return;
-    }
-    // Avança para a próxima etapa
+
     setAnimationClass("fade-out");
     setTimeout(() => {
       setStep(2);
@@ -258,6 +273,15 @@ function LoginRegisterPage() {
           {passwordVisible ? <FaEyeSlash /> : <FaEye />}
         </span>
       </div>
+      {passwordErrors.length > 0 && (
+        <div className="error-messages">
+          {passwordErrors.map((error, index) => (
+            <p key={index} className="error">
+              {error}
+            </p>
+          ))}
+        </div>
+      )}
       <div className="input-group">
         <input
           type={confirmPasswordVisible ? "text" : "password"}
@@ -273,6 +297,11 @@ function LoginRegisterPage() {
           {confirmPasswordVisible ? <FaEyeSlash /> : <FaEye />}
         </span>
       </div>
+      {confirmPasswordError && (
+        <div className="error-messages">
+          <p className="error">{confirmPasswordError}</p>
+        </div>
+      )}
       <button type="submit" className="submit-btn" disabled={loading}>
         PRÓXIMO
       </button>
