@@ -1,0 +1,49 @@
+.password-strength-tooltip {
+  position: absolute;
+  top: calc(100% + 12px); /* Posição abaixo do input com espaço para a seta */
+  left: 0;
+  width: 100%;
+  background-color: rgba(26, 10, 56, 0.85); /* Roxo escuro semi-transparente */
+  color: #e0e0e0;
+  padding: 15px;
+  border-radius: 8px;
+  z-index: 10;
+  box-shadow: 0 0 15px 5px rgba(176, 120, 255, 0.3); /* Efeito de brilho roxo */
+  border: 1px solid rgba(176, 120, 255, 0.4);
+  backdrop-filter: blur(5px); /* Efeito de vidro fosco */
+}
+
+/* Seta (triângulo) do tooltip */
+.password-strength-tooltip::before {
+  content: '';
+  position: absolute;
+  bottom: 100%; /* Posiciona a seta no topo do tooltip */
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 8px;
+  border-style: solid;
+  border-color: transparent transparent rgba(176, 120, 255, 0.4) transparent;
+}
+
+.password-strength-tooltip ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.password-strength-tooltip li {
+  font-size: 0.875rem;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.password-strength-tooltip li.valid {
+  color: #00fddc; /* Cor ciano neon para sucesso */
+  font-weight: 500;
+}
+
+.password-strength-tooltip li.invalid {
+  color: #ff5a8d; /* Cor rosa neon para falha */
+}

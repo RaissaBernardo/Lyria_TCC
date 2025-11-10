@@ -12,7 +12,10 @@ import { register, getPersonas, esqueciMinhaSenha } from "../../services/LyriaAp
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import ForgotPasswordModal from "../../components/ForgotPasswordModal";
+import PasswordStrength from "../../components/PasswordStrength";
+import { validatePassword, validateConfirmPassword } from "./validations";
 import "./Styles/styles.css";
+import "./Styles/errors.css";
 
 import {
   SpeechConfig,
@@ -71,6 +74,10 @@ function LoginRegisterPage() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
+  const [passwordErrors, setPasswordErrors] = useState([]);
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
+  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+  const [isPasswordStrong, setIsPasswordStrong] = useState(false);
 
   // State for step 2
   const [personas, setPersonas] = useState({});
@@ -79,6 +86,11 @@ function LoginRegisterPage() {
 
   // Loading state
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const passwordValidationErrors = validatePassword(senha);
+    setIsPasswordStrong(passwordValidationErrors.length === 0);
+  }, [senha]);
 
   useEffect(() => {
     // Busca as personas quando o formulário de registro é exibido
@@ -105,16 +117,30 @@ function LoginRegisterPage() {
   };
 
   const handleNextStep = () => {
-    // Validação dos campos da primeira etapa
+    // 1. Validação de Preenchimento (Prioridade)
     if (!nome.trim() || !email.trim() || !senha.trim()) {
       addToast("Por favor, preencha todos os campos.", "error");
       return;
     }
-    if (senha !== confirmarSenha) {
-      addToast("As senhas não coincidem.", "error");
+
+    // 2. Validação de Complexidade da Senha
+    const passwordValidationErrors = validatePassword(senha);
+    setPasswordErrors(passwordValidationErrors);
+
+    const confirmPasswordValidationError = validateConfirmPassword(
+      senha,
+      confirmarSenha
+    );
+    setConfirmPasswordError(confirmPasswordValidationError);
+
+    if (
+      passwordValidationErrors.length > 0 ||
+      confirmPasswordValidationError
+    ) {
       return;
     }
-    // Avança para a próxima etapa
+
+    // 3. Avançar para a próxima etapa
     setAnimationClass("fade-out");
     setTimeout(() => {
       setStep(2);
@@ -243,14 +269,17 @@ function LoginRegisterPage() {
           onChange={(e) => setEmail(e.target.value)}
         />
       </div>
-      <div className="input-group">
+      <div className="input-group" style={{ position: 'relative' }}>
         <input
           type={passwordVisible ? "text" : "password"}
           placeholder="Senha"
           required
           value={senha}
           onChange={(e) => setSenha(e.target.value)}
+          onFocus={() => setIsPasswordFocused(true)}
+          onBlur={() => setIsPasswordFocused(false)}
         />
+        {isPasswordFocused && !isPasswordStrong && <PasswordStrength password={senha} />}
         <span
           className="password-toggle-icon"
           onClick={() => setPasswordVisible(!passwordVisible)}
@@ -273,6 +302,11 @@ function LoginRegisterPage() {
           {confirmPasswordVisible ? <FaEyeSlash /> : <FaEye />}
         </span>
       </div>
+      {confirmPasswordError && (
+        <div className="error-messages">
+          <p className="error">{confirmPasswordError}</p>
+        </div>
+      )}
       <button type="submit" className="submit-btn" disabled={loading}>
         PRÓXIMO
       </button>
