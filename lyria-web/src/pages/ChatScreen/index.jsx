@@ -174,7 +174,7 @@ function ChatContent() {
 
     const observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
-        if (mutation.type === 'childList' || mutation.type === 'subtree') {
+        if (mutation.type === 'childList') {
           scrollToBottom();
         }
       }
@@ -518,13 +518,11 @@ function ChatContent() {
         />
         
         <div ref={chatBodyRef} className={`galaxy-chat-body ${chatBodyAnimationClass}`}>
-          <div className="chat-content-wrapper">
             {messages.length === 0 && !isStartingNewChat ? (
               <PromptSuggestions onSuggestionClick={handleSend} />
             ) : (
               <MessageList messages={messages} isBotTyping={isBotTyping} user={user} />
             )}
-          </div>
         </div>
         
         <ChatInput
