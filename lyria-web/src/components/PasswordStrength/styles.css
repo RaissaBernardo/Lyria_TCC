@@ -1,9 +1,8 @@
 .password-strength-tooltip {
   position: absolute;
-  top: 50%;
-  left: calc(100% + 15px); /* Posiciona à direita do input com espaço */
-  transform: translateY(-50%);
-  width: 300px; /* Largura fixa para melhor layout */
+  top: calc(100% + 12px); /* Posição abaixo do input com espaço para a seta */
+  left: 0;
+  width: 100%;
   background-color: rgba(26, 10, 56, 0.85); /* Roxo escuro semi-transparente */
   color: #e0e0e0;
   padding: 15px;
@@ -18,12 +17,12 @@
 .password-strength-tooltip::before {
   content: '';
   position: absolute;
-  top: 50%;
-  right: 100%; /* Posiciona a seta à esquerda do tooltip */
-  transform: translateY(-50%);
+  bottom: 100%; /* Posiciona a seta no topo do tooltip */
+  left: 50%;
+  transform: translateX(-50%);
   border-width: 8px;
   border-style: solid;
-  border-color: transparent rgba(176, 120, 255, 0.4) transparent transparent;
+  border-color: transparent transparent rgba(176, 120, 255, 0.4) transparent;
 }
 
 .password-strength-tooltip ul {
