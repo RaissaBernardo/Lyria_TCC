@@ -77,6 +77,7 @@ function LoginRegisterPage() {
   const [passwordErrors, setPasswordErrors] = useState([]);
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+  const [isPasswordStrong, setIsPasswordStrong] = useState(false);
 
   // State for step 2
   const [personas, setPersonas] = useState({});
@@ -85,6 +86,11 @@ function LoginRegisterPage() {
 
   // Loading state
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const passwordValidationErrors = validatePassword(senha);
+    setIsPasswordStrong(passwordValidationErrors.length === 0);
+  }, [senha]);
 
   useEffect(() => {
     // Busca as personas quando o formulário de registro é exibido
@@ -111,6 +117,13 @@ function LoginRegisterPage() {
   };
 
   const handleNextStep = () => {
+    // 1. Validação de Preenchimento (Prioridade)
+    if (!nome.trim() || !email.trim() || !senha.trim()) {
+      addToast("Por favor, preencha todos os campos.", "error");
+      return;
+    }
+
+    // 2. Validação de Complexidade da Senha
     const passwordValidationErrors = validatePassword(senha);
     setPasswordErrors(passwordValidationErrors);
 
@@ -127,11 +140,7 @@ function LoginRegisterPage() {
       return;
     }
 
-    if (!nome.trim() || !email.trim() || !senha.trim()) {
-      addToast("Por favor, preencha todos os campos.", "error");
-      return;
-    }
-
+    // 3. Avançar para a próxima etapa
     setAnimationClass("fade-out");
     setTimeout(() => {
       setStep(2);
@@ -270,7 +279,7 @@ function LoginRegisterPage() {
           onFocus={() => setIsPasswordFocused(true)}
           onBlur={() => setIsPasswordFocused(false)}
         />
-        {isPasswordFocused && <PasswordStrength password={senha} />}
+        {isPasswordFocused && !isPasswordStrong && <PasswordStrength password={senha} />}
         <span
           className="password-toggle-icon"
           onClick={() => setPasswordVisible(!passwordVisible)}
