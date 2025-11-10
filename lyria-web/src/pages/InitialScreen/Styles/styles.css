@@ -224,6 +224,10 @@
   animation: fadeInBackdrop 0.4s ease;
 }
 
+/* ================================================= */
+/* =====         CORREÇÃO DO MODAL (CSS)         ===== */
+/* ================================================= */
+
 .info-modal-content {
   position: relative;
   width: 90%;
@@ -240,11 +244,46 @@
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 
   animation: slideInUp 0.5s ease-out;
+
+  /* 1. Limita a altura do modal a 85% da altura da tela */
+  max-height: 85vh; 
+  
+  /* 2. Adiciona scroll automático APENAS se o conteúdo passar da altura máxima */
+  overflow-y: auto; 
+  
+  /* 3. Garante que o layout interno funcione bem com o scroll */
+  display: flex;
+  flex-direction: column;
+
+  /* (Opcional) Estilização da barra de scroll */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(201, 182, 242, 0.5) transparent;
 }
 
+/* (Opcional) Estilização da barra de scroll para Chrome/Safari */
+.info-modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.info-modal-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.info-modal-content::-webkit-scrollbar-thumb {
+  background-color: rgba(201, 182, 242, 0.5);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+/* ================================================= */
+/* ====== FIM DAS ALTERAÇÕES NO MODAL (CSS) ====== */
+/* ================================================= */
+
+
 .info-modal-content h2 {
-  font-size: 2rem;
-  margin-bottom: 1.5rem;
+  font-size: 1.3rem;
+  margin-bottom: 1.2rem;
   color: var(--color-light-purple);
 }
 
@@ -494,7 +533,7 @@
 }
 
 .contact-info {
-  margin-top: 1.5rem;
+  margin-top: 1.3rem;
 }
 
 .contact-info p {
