@@ -58,6 +58,7 @@ function ChatContent() {
   const recognizerRef = useRef(null);
   const isNewChatFlow = useRef(false);
   const chatBodyRef = useRef(null);
+  const chatEndRef = useRef(null);
   const [conversations, setConversations] = useState([]);
   const [currentChatId, setCurrentChatId] = useState(null);
   const [isListening, setIsListening] = useState(false);
@@ -159,32 +160,7 @@ function ChatContent() {
   }, [selectedVoice]);
 
   useEffect(() => {
-    const chatBody = chatBodyRef.current;
-    if (!chatBody) return;
-
-    const scrollToBottom = () => {
-      setTimeout(() => {
-        if (chatBody) {
-          chatBody.scrollTop = chatBody.scrollHeight;
-        }
-      }, 0);
-    };
-
-    scrollToBottom();
-
-    const observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        if (mutation.type === 'childList') {
-          scrollToBottom();
-        }
-      }
-    });
-
-    observer.observe(chatBody, { childList: true, subtree: true });
-
-    return () => {
-      observer.disconnect();
-    };
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const stripMarkdown = (text = "") => {
@@ -523,6 +499,7 @@ function ChatContent() {
             ) : (
               <MessageList messages={messages} isBotTyping={isBotTyping} user={user} />
             )}
+          <div ref={chatEndRef} />
         </div>
         
         <ChatInput
