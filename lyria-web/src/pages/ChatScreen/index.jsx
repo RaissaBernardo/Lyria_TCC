@@ -163,14 +163,18 @@ function ChatContent() {
     if (!chatBody) return;
 
     const scrollToBottom = () => {
-      chatBody.scrollTop = chatBody.scrollHeight;
+      setTimeout(() => {
+        if (chatBody) {
+          chatBody.scrollTop = chatBody.scrollHeight;
+        }
+      }, 0);
     };
 
     scrollToBottom();
 
     const observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
-        if (mutation.type === 'childList') {
+        if (mutation.type === 'childList' || mutation.type === 'subtree') {
           scrollToBottom();
         }
       }
@@ -514,11 +518,13 @@ function ChatContent() {
         />
         
         <div ref={chatBodyRef} className={`galaxy-chat-body ${chatBodyAnimationClass}`}>
-          {messages.length === 0 && !isStartingNewChat ? (
-            <PromptSuggestions onSuggestionClick={handleSend} />
-          ) : (
-            <MessageList messages={messages} isBotTyping={isBotTyping} user={user} />
-          )}
+          <div className="chat-content-wrapper">
+            {messages.length === 0 && !isStartingNewChat ? (
+              <PromptSuggestions onSuggestionClick={handleSend} />
+            ) : (
+              <MessageList messages={messages} isBotTyping={isBotTyping} user={user} />
+            )}
+          </div>
         </div>
         
         <ChatInput
