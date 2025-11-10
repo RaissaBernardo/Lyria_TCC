@@ -12,6 +12,7 @@ import { register, getPersonas, esqueciMinhaSenha } from "../../services/LyriaAp
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import ForgotPasswordModal from "../../components/ForgotPasswordModal";
+import PasswordStrength from "../../components/PasswordStrength";
 import { validatePassword, validateConfirmPassword } from "./validations";
 import "./Styles/styles.css";
 import "./Styles/errors.css";
@@ -75,6 +76,7 @@ function LoginRegisterPage() {
   const [confirmarSenha, setConfirmarSenha] = useState("");
   const [passwordErrors, setPasswordErrors] = useState([]);
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
+  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
 
   // State for step 2
   const [personas, setPersonas] = useState({});
@@ -258,14 +260,17 @@ function LoginRegisterPage() {
           onChange={(e) => setEmail(e.target.value)}
         />
       </div>
-      <div className="input-group">
+      <div className="input-group" style={{ position: 'relative' }}>
         <input
           type={passwordVisible ? "text" : "password"}
           placeholder="Senha"
           required
           value={senha}
           onChange={(e) => setSenha(e.target.value)}
+          onFocus={() => setIsPasswordFocused(true)}
+          onBlur={() => setIsPasswordFocused(false)}
         />
+        {isPasswordFocused && <PasswordStrength password={senha} />}
         <span
           className="password-toggle-icon"
           onClick={() => setPasswordVisible(!passwordVisible)}
@@ -273,15 +278,6 @@ function LoginRegisterPage() {
           {passwordVisible ? <FaEyeSlash /> : <FaEye />}
         </span>
       </div>
-      {passwordErrors.length > 0 && (
-        <div className="error-messages">
-          {passwordErrors.map((error, index) => (
-            <p key={index} className="error">
-              {error}
-            </p>
-          ))}
-        </div>
-      )}
       <div className="input-group">
         <input
           type={confirmPasswordVisible ? "text" : "password"}
