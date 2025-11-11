@@ -78,6 +78,7 @@ function LoginRegisterPage() {
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const [isPasswordStrong, setIsPasswordStrong] = useState(false);
+  const [submissionAttempted, setSubmissionAttempted] = useState(false);
 
   // State for step 2
   const [personas, setPersonas] = useState({});
@@ -117,14 +118,17 @@ function LoginRegisterPage() {
   };
 
   const handleNextStep = () => {
+    setSubmissionAttempted(true);
+
     // 1. Validação de Preenchimento (Prioridade)
     if (!nome.trim() || !email.trim() || !senha.trim()) {
       addToast("Por favor, preencha todos os campos.", "error");
       return;
     }
 
-    // 2. Validação de Complexidade da Senha
+    // 2. Validação da Senha
     const passwordValidationErrors = validatePassword(senha);
+    const isPasswordValid = passwordValidationErrors.length === 0;
     setPasswordErrors(passwordValidationErrors);
 
     const confirmPasswordValidationError = validateConfirmPassword(
@@ -133,10 +137,8 @@ function LoginRegisterPage() {
     );
     setConfirmPasswordError(confirmPasswordValidationError);
 
-    if (
-      passwordValidationErrors.length > 0 ||
-      confirmPasswordValidationError
-    ) {
+    // Bloqueia o avanço se a senha for inválida ou a confirmação falhar
+    if (!isPasswordValid || confirmPasswordValidationError) {
       return;
     }
 
@@ -279,7 +281,7 @@ function LoginRegisterPage() {
           onFocus={() => setIsPasswordFocused(true)}
           onBlur={() => setIsPasswordFocused(false)}
         />
-        {isPasswordFocused && !isPasswordStrong && <PasswordStrength password={senha} />}
+        {(isPasswordFocused || (submissionAttempted && !isPasswordStrong)) && !isPasswordStrong && <PasswordStrength password={senha} />}
         <span
           className="password-toggle-icon"
           onClick={() => setPasswordVisible(!passwordVisible)}
