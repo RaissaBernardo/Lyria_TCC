@@ -14,10 +14,23 @@ export const conversarAnonimo = async (pergunta, persona, signal) => {
 };
 
 export const esqueciMinhaSenha = async (data) => {
-  console.log("API: Chamando esqueciMinhaSenha (simulado)", data);
-  // TODO: Implementar a chamada de API real para o endpoint de redefinição de senha.
-  // A implementação atual é um mock para fins de desenvolvimento do frontend.
-  return Promise.resolve({ status: "ok" });
+  try {
+    const response = await api.post("/Lyria/esqueci-minha-senha", data);
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao solicitar redefinição de senha:", error);
+    throw error;
+  }
+};
+
+export const redefinirSenha = async (data) => {
+  try {
+    const response = await api.post("/Lyria/redefinir-senha", data);
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao redefinir senha:", error);
+    throw error;
+  }
 };
 
 export const postMessage = async (pergunta, conversa_id, persona, signal) => {

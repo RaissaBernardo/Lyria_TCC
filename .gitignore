@@ -1,0 +1,17 @@
+# Frontend
+lyria-web/node_modules/
+lyria-web/.vite/
+lyria-web/dist/
+lyria-web/npm_output.log
+
+# Backend
+backEnd/__pycache__/
+backEnd/venv/
+*.pyc
+*.log
+*.db
+*.sqlite3
+
+# OS files
+.DS_Store
+Thumbs.db
