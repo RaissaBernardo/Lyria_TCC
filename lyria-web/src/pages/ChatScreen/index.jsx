@@ -215,7 +215,9 @@ function ChatContent() {
       plainText,
       (result) => {
         if (result.reason === ResultReason.SynthesizingAudioCompleted) {
-          setAudioPlaybackState({ messageId: null, isPlaying: false });
+          setTimeout(() => {
+            setAudioPlaybackState({ messageId: null, isPlaying: false });
+          }, 1000);
         }
         synthesizer.close();
         synthesizerRef.current = null;
