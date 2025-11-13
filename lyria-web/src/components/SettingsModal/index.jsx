@@ -44,6 +44,11 @@ const SettingsModal = ({
                   </option>
                 ))}
               </select>
+              {isConversationStarted && (
+                <small className="persona-lock-message">
+                  Inicie uma nova conversa para trocar de persona.
+                </small>
+              )}
             </div>
           )}
           <div className="settings-group">
