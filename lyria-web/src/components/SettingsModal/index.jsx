@@ -10,6 +10,7 @@ const SettingsModal = ({
   availableVoices,
   selectedVoice,
   onVoiceChange,
+  isConversationStarted,
 }) => {
   if (!isOpen) return null;
 
@@ -35,6 +36,7 @@ const SettingsModal = ({
                 value={selectedPersona}
                 onChange={onPersonaChange}
                 className="settings-select"
+                disabled={isConversationStarted}
               >
                 {Object.keys(personas).map((key) => (
                   <option key={key} value={key}>
