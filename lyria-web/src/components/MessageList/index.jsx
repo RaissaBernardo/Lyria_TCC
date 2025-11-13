@@ -1,4 +1,4 @@
-import { FiUser, FiCopy, FiCheck, FiPlay, FiPause } from "react-icons/fi";
+import { FiUser, FiCopy, FiCheck, FiPlay } from "react-icons/fi";
 import { RiRobot2Line } from "react-icons/ri";
 import AnimatedBotMessage from "../AnimatedBotMessage";
 import { useState, useEffect, useRef } from "react";
@@ -50,19 +50,10 @@ const MessageList = ({
                 <button
                   className="action-btn"
                   onClick={() => onAudioPlay(msg.id, msg.text)}
-                  aria-label={
-                    audioPlaybackState.isPlaying &&
-                    audioPlaybackState.messageId === msg.id
-                      ? "Pausar áudio"
-                      : "Reproduzir áudio"
-                  }
+                  aria-label="Reproduzir áudio"
+                  disabled={audioPlaybackState.isPlaying}
                 >
-                  {audioPlaybackState.isPlaying &&
-                  audioPlaybackState.messageId === msg.id ? (
-                    <FiPause />
-                  ) : (
-                    <FiPlay />
-                  )}
+                  <FiPlay />
                 </button>
                 <button
                   className="action-btn"

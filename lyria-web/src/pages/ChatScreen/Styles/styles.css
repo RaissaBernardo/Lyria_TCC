@@ -220,6 +220,13 @@
   opacity: 1;
 }
 
+.action-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none;
+  background: rgba(255, 255, 255, 0.1);
+}
+
 .galaxy-chat-input-container {
   display: flex;
   align-items: center;

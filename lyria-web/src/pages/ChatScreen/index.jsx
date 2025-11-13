@@ -196,32 +196,16 @@ function ChatContent() {
       .replace(/!\[[^\]]*\]\([^)]+\)/g, " ").trim();
   };
 
-  const handleAudioPlayback = (messageId, text, isUserAction = false) => {
-    if (!isSpeechEnabled) return;
+  const handleAudioPlayback = (messageId, text) => {
+    if (audioPlaybackState.isPlaying || !isSpeechEnabled) {
+      return;
+    }
 
-    if (
-      !isUserAction &&
-      messages.length === 1 &&
-      text.toLowerCase().includes("olá")
-    ) {
+    if (messages.length === 1 && text.toLowerCase().includes("olá")) {
       return;
     }
 
     const plainText = stripMarkdown(text);
-
-    if (synthesizerRef.current && audioPlaybackState.isPlaying) {
-      if (audioPlaybackState.messageId === messageId) {
-        synthesizerRef.current.close();
-        synthesizerRef.current = null;
-        setAudioPlaybackState({ messageId: null, isPlaying: false });
-        return;
-      }
-      if (!isUserAction) {
-        return;
-      }
-      synthesizerRef.current.close();
-      synthesizerRef.current = null;
-    }
     const synthesizer = new SpeechSynthesizer(speechConfig);
     synthesizerRef.current = synthesizer;
 
@@ -556,9 +540,7 @@ function ChatContent() {
               messages={messages}
               isBotTyping={isBotTyping}
               user={user}
-              onAudioPlay={(messageId, text) =>
-                handleAudioPlayback(messageId, text, true)
-              }
+              onAudioPlay={handleAudioPlayback}
               audioPlaybackState={audioPlaybackState}
             />
           )}
