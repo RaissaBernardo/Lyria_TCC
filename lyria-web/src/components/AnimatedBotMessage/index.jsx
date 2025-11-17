@@ -20,7 +20,7 @@ function AnimatedBotMessage({ fullText, animate = true }) {
       setText(fullText.slice(0, currentIndex));
       timeoutId = setTimeout(() => {
         typeCharacter(currentIndex + 1);
-      }, 25);
+      }, 8);
     };
 
     typeCharacter(0);
