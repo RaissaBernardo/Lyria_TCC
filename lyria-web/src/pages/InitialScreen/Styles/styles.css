@@ -10,13 +10,13 @@
 }
 
 .app-header {
-  position: fixed;
+  position: absolute;
   top: 48px;
   left: 50%;
   transform: translateX(-50%);
   width: 70%;
   max-width: 1600px;
-  z-index: 10;
+  z-index: 1000;
   background: rgba(34, 34, 34, 0);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -25,7 +25,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 65px;
+  height: auto;
   padding: 0 30px;
   transition: all 0.3s ease;
 }
