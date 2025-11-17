@@ -56,12 +56,17 @@ function ChatContent() {
   const [isStartingNewChat, setIsStartingNewChat] = useState(false);
   const requestCancellationRef = useRef({ cancel: () => {} });
   const recognizerRef = useRef(null);
+  const synthesizerRef = useRef(null);
   const isNewChatFlow = useRef(false);
   const chatBodyRef = useRef(null);
   const [conversations, setConversations] = useState([]);
   const [currentChatId, setCurrentChatId] = useState(null);
   const [isListening, setIsListening] = useState(false);
   const [isSpeechEnabled, setIsSpeechEnabled] = useState(false);
+  const [audioPlaybackState, setAudioPlaybackState] = useState({
+    messageId: null,
+    isPlaying: false,
+  });
   const [selectedVoice, setSelectedVoice] = useState(availableVoices[0].value);
   const [chatBodyAnimationClass, setChatBodyAnimationClass] = useState("fade-in");
   const [isLoginPromptVisible, setLoginPromptVisible] = useState(false);
@@ -191,8 +196,10 @@ function ChatContent() {
       .replace(/!\[[^\]]*\]\([^)]+\)/g, " ").trim();
   };
 
-  const speakResponse = (text) => {
-    if (!isSpeechEnabled || !isPageVisible) return;
+  const handleAudioPlayback = (messageId, text) => {
+    if (audioPlaybackState.isPlaying || !isSpeechEnabled) {
+      return;
+    }
 
     if (messages.length === 1 && text.toLowerCase().includes("olá")) {
       return;
@@ -200,12 +207,26 @@ function ChatContent() {
 
     const plainText = stripMarkdown(text);
     const synthesizer = new SpeechSynthesizer(speechConfig);
+    synthesizerRef.current = synthesizer;
+
+    setAudioPlaybackState({ messageId, isPlaying: true });
+
     synthesizer.speakTextAsync(
       plainText,
-      () => synthesizer.close(),
+      (result) => {
+        if (result.reason === ResultReason.SynthesizingAudioCompleted) {
+          setTimeout(() => {
+            setAudioPlaybackState({ messageId: null, isPlaying: false });
+          }, 1000);
+        }
+        synthesizer.close();
+        synthesizerRef.current = null;
+      },
       (error) => {
         console.error("Erro na síntese de voz:", error);
+        setAudioPlaybackState({ messageId: null, isPlaying: false });
         synthesizer.close();
+        synthesizerRef.current = null;
       }
     );
   };
@@ -264,7 +285,7 @@ function ChatContent() {
         animate: true 
       };
       setMessages((prev) => [...prev, botMessage]);
-      speakResponse(response.resposta);
+      handleAudioPlayback(botMessage.id, response.resposta);
       
     } catch (error) {
       if (error.name !== "AbortError") {
@@ -275,7 +296,7 @@ function ChatContent() {
           text: "Desculpe, ocorreu um erro ao processar sua mensagem." 
         };
         setMessages((prev) => [...prev, errorMessage]);
-        speakResponse(errorMessage.text);
+        handleAudioPlayback(errorMessage.id, errorMessage.text);
       }
     } finally {
       setIsBotTyping(false);
@@ -517,7 +538,13 @@ function ChatContent() {
           {messages.length === 0 && !isStartingNewChat ? (
             <PromptSuggestions onSuggestionClick={handleSend} />
           ) : (
-            <MessageList messages={messages} isBotTyping={isBotTyping} user={user} />
+            <MessageList
+              messages={messages}
+              isBotTyping={isBotTyping}
+              user={user}
+              onAudioPlay={handleAudioPlayback}
+              audioPlaybackState={audioPlaybackState}
+            />
           )}
         </div>
         
