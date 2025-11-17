@@ -4,12 +4,16 @@
   left: 0;
   right: 0;
   bottom: 0;
+  width: 100vw;
+  height: 100vh;
   background-color: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
   backdrop-filter: blur(5px);
+  padding: 1rem;
+  margin: 0;
 }
 
 .login-prompt-content {
@@ -22,6 +26,9 @@
   width: 90%;
   color: var(--color-off-white);
   animation: slide-up 0.3s ease-out;
+  position: relative;
+  margin: 0;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 @keyframes slide-up {
@@ -39,12 +46,14 @@
   font-size: 1.5rem;
   color: var(--color-light-purple);
   margin-bottom: 1rem;
+  margin-top: 0;
 }
 
 .login-prompt-content p {
   font-size: 1rem;
   line-height: 1.5;
   margin-bottom: 2rem;
+  color: rgba(246, 244, 241, 0.85);
 }
 
 .login-btn {
@@ -56,7 +65,7 @@
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s, transform 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -67,6 +76,11 @@
 
 .login-btn:hover {
   background-color: var(--color-purple-hover);
+  transform: translateY(-2px);
+}
+
+.login-btn:active {
+  transform: translateY(0);
 }
 
 .guest-btn {
@@ -86,6 +100,11 @@
 .guest-btn:hover {
   background-color: var(--color-light-purple);
   color: var(--color-dark-purple-v2);
+  transform: translateY(-2px);
+}
+
+.guest-btn:active {
+  transform: translateY(0);
 }
 
 .dismiss-btn {
@@ -95,8 +114,38 @@
   font-size: 0.9rem;
   cursor: pointer;
   transition: color 0.3s;
+  padding: 0.5rem;
 }
 
 .dismiss-btn:hover {
   color: var(--color-off-white);
+  text-decoration: underline;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 480px) {
+  .login-prompt-overlay {
+    padding: 0.5rem;
+  }
+
+  .login-prompt-content {
+    padding: 2rem 1.5rem;
+    width: 95%;
+    max-width: 95%;
+  }
+
+  .login-prompt-content h3 {
+    font-size: 1.3rem;
+  }
+
+  .login-prompt-content p {
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .login-btn,
+  .guest-btn {
+    font-size: 0.95rem;
+    padding: 10px 20px;
+  }
 }

@@ -1,5 +1,5 @@
 /* ============================================ */
-/* INITIALSCREEN STYLES - COMPLETO E CORRIGIDO */
+/* INITIALSCREEN STYLES - VERSÃO FINAL         */
 /* ============================================ */
 
 .galaxy-background {
@@ -8,7 +8,7 @@
   left: 0;
   width: 100%;
   height: 100vh;
-  z-index: -1;
+  z-index: 0;
   overflow: hidden;
   background-color: black;
 }
@@ -20,7 +20,7 @@
   transform: translateX(-50%);
   width: 70%;
   max-width: 1600px;
-  z-index: 10;
+  z-index: 100;
   background: rgba(34, 34, 34, 0);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -38,6 +38,7 @@
   display: flex;
   align-items: center;
   height: 90%;
+  text-decoration: none;
 }
 
 .app-header .logo {
@@ -128,9 +129,7 @@
 }
 
 .App {
-  position: fixed;
-  top: 0;
-  left: 0;
+  position: relative;
   width: 100vw;
   height: 100vh;
   display: flex;
@@ -142,19 +141,21 @@
 
 .main-content {
   position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  z-index: 1;
+  justify-content: center;
   padding: 2rem;
   color: black;
-  max-width: 100%;
-  overflow: hidden;
+  width: 100%;
+  max-width: 1200px;
 }
 
 #comecar {
-  border-radius: 8rem;
-  margin-top: 5%;
+  border-radius: 50px;
+  margin-top: 2rem;
   text-align: center;
-  padding: 0.8rem;
   font-family: "Poppins", sans-serif;
   font-size: 1.2rem;
   font-weight: 500;
@@ -162,7 +163,6 @@
   background-color: white;
   letter-spacing: 0.5px;
   padding: 20px 70px;
-  border-radius: 50px;
   border: none;
   cursor: pointer;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
@@ -175,6 +175,10 @@
   background-color: #f0f0f0;
 }
 
+#comecar:active {
+  transform: translateY(-1px);
+}
+
 .linkSemEstilo {
   text-decoration: none;
   color: inherit;
@@ -182,13 +186,13 @@
 
 #espaço {
   padding: 5px;
+  display: inline-block;
 }
 
 #sobre {
-  border-radius: 8rem;
-  margin-top: 5%;
+  border-radius: 50px;
+  margin-top: 2rem;
   margin-left: 10px;
-  padding: 0.8rem;
   font-family: "Poppins", sans-serif;
   font-size: 1.2rem;
   font-weight: 500;
@@ -196,7 +200,6 @@
   letter-spacing: 0.5px;
   background-color: rgba(32, 32, 32, 0.731);
   padding: 20px 59px;
-  border-radius: 50px;
   border: 1.8px solid rgb(75, 75, 75);
   cursor: pointer;
   transition: all 0.3s ease;
@@ -209,13 +212,17 @@
   border-color: #c9b6f2;
 }
 
+#sobre:active {
+  transform: translateY(-1px);
+}
 
 #frase_efeito {
   text-align: center;
-  align-items: center;
   color: white;
-  margin-top: 5%;
+  margin-bottom: 2rem;
   font-size: 40px;
+  font-weight: 700;
+  line-height: 1.2;
 }
 
 .info-modal-backdrop {
@@ -224,14 +231,15 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 2000;
   animation: fadeInBackdrop 0.4s ease;
+  padding: 1rem;
 }
 
 .info-modal-content {
@@ -242,12 +250,12 @@
   color: white;
   text-align: left;
   
-  background: rgba(13, 15, 47, 0.4);
+  background: rgba(13, 15, 47, 0.9);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1.5px solid rgba(201, 182, 242, 0.2);
   border-radius: 20px;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
 
   animation: slideInUp 0.5s ease-out;
 
@@ -297,12 +305,12 @@
 }
 
 .info-modal-content ul {
-    list-style-position: inside;
-    padding-left: 10px;
+  list-style-position: inside;
+  padding-left: 10px;
 }
 
 .info-modal-content li {
-    margin-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .close-modal-btn {
@@ -315,6 +323,9 @@
   font-size: 1.5rem;
   cursor: pointer;
   transition: color 0.3s ease, transform 0.3s ease;
+  padding: 0.5rem;
+  line-height: 1;
+  z-index: 1;
 }
 
 .close-modal-btn:hover {
@@ -445,7 +456,10 @@
 .botoes-container {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
+  width: 100%;
 }
 
 .contact-info {
@@ -497,9 +511,7 @@
   }
 
   .main-content {
-    width: 100%;
-    margin-left: 0;
-    padding: 2rem;
+    padding: 2rem 1rem;
   }
 
   #frase_efeito {
@@ -509,8 +521,8 @@
 
 @media (max-width: 768px) {
   .App {
+    height: 100vh;
     height: 100dvh;
-    height: -webkit-fill-available;
   }
 
   .app-header {
@@ -518,12 +530,10 @@
     padding: 0 15px;
     top: 20px;
     width: 90%;
-    max-width: 90vw;
   }
 
   .logo-image {
     height: 40px;
-    width: auto;
   }
 
   .app-header nav {
@@ -532,7 +542,6 @@
   }
   
   .nav-actions {
-    display: flex;
     gap: 10px;
   }
   
@@ -543,32 +552,28 @@
 
   .main-content {
     padding: 1rem;
-    width: 100%;
-    overflow: visible;
   }
 
   #frase_efeito {
     font-size: clamp(24px, 6vw, 40px);
     padding: 0 1rem;
-    word-wrap: break-word;
   }
   
   .botoes-container {
     flex-direction: column;
-    align-items: center;
     gap: 1rem;
-    width: 100%;
     max-width: 300px;
     margin: 0 auto;
   }
 
-  #comecar, #sobre {
+  #comecar, 
+  #sobre {
     font-size: 1rem;
     padding: 18px 40px;
     width: 100%;
     max-width: 300px;
     margin-left: 0;
-    margin: 0;
+    margin-top: 0.5rem;
   }
 }
 
@@ -576,10 +581,7 @@
   .app-header {
     top: 15px;
     width: 95%;
-  }
-
-  .app-header nav a {
-    font-size: 0.9rem;
+    height: 56px;
   }
 
   .logo-image {
@@ -587,20 +589,30 @@
   }
   
   .nav-actions {
-    gap: 5px;
+    gap: 8px;
   }
   
   .nav-actions .nav-button {
     padding: 6px 10px;
+    font-size: 0.85rem;
+  }
+
+  .main-content {
+    padding: 1rem 0.5rem;
   }
 
   #frase_efeito {
-    font-size: 24px;
+    font-size: 22px;
+    padding: 0 0.5rem;
   }
 
   #comecar,
   #sobre {
     font-size: 0.95rem;
     padding: 16px 32px;
+  }
+
+  .info-modal-content {
+    padding: 2rem 1.5rem;
   }
 }
