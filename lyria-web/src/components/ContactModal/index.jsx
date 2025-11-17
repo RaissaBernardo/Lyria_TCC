@@ -2,7 +2,6 @@ import { FaTimes } from "react-icons/fa";
 import { FiGithub, FiInstagram } from "react-icons/fi";
 
 const contactLinks = [
-  { icon: <FiGithub />, label: "LyrIA-Project", href: "https://github.com/RaissaBernardo/Lyria", targetBlank: true },
   { icon: <FiInstagram />, label: "@rah_antonia", href: "https://www.instagram.com/rah_antonia", targetBlank: true },
   { icon: <FiInstagram />, label: "@antonybriito", href: "https://www.instagram.com/antonybriito", targetBlank: true },
   { icon: <FiInstagram />, label: "@jaogabxs", href: "https://www.instagram.com/jaogabxs", targetBlank: true },
