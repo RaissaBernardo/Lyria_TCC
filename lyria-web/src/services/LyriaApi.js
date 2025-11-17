@@ -33,19 +33,15 @@ export const redefinirSenha = async (data) => {
   }
 };
 
-export const postMessage = async (pergunta, conversa_id, persona, signal) => {
-  console.log("API: Chamando postMessage", { pergunta, conversa_id, persona });
+export const postMessage = async (pergunta, conversa_id) => {
+  console.log("API: Chamando postMessage", { pergunta, conversa_id });
 
-  // Constrói o corpo da requisição dinamicamente
-  const requestBody = { pergunta, persona };
-  if (conversa_id) {
-    requestBody.conversa_id = conversa_id;
+  if (!conversa_id) {
+    throw new Error("ID da conversa é obrigatório para postar mensagem.");
   }
 
   try {
-    const response = await api.post("/Lyria/conversar-logado", requestBody, {
-      signal,
-    });
+    const response = await api.post("/Lyria/conversar-logado", { pergunta, conversa_id });
     console.log("API: Sucesso em postMessage", response.data);
     return response.data;
   } catch (error) {

@@ -235,74 +235,82 @@ function ChatContent() {
   const handleSend = async (textToSend) => {
     const trimmedInput = (typeof textToSend === "string" ? textToSend : input).trim();
     if (!trimmedInput || isBotTyping || isListening) return;
-
+  
     if (!isConversationStarted) {
       setIsConversationStarted(true);
     }
-    
-    requestCancellationRef.current?.cancel();
-    
+  
     const userMessage = { id: crypto.randomUUID(), sender: "user", text: trimmedInput };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsBotTyping(true);
-    
+  
     try {
-      const controller = new AbortController();
-      requestCancellationRef.current = { cancel: () => controller.abort() };
-      
-      let response;
-    
+      let conversaId = currentChatId;
+  
       if (isAuthenticated && user) {
-        let conversaId = currentChatId;
-        
+        // Se não houver ID, cria uma nova conversa PRIMEIRO
         if (!conversaId) {
-          console.log("🆕 Criando nova conversa antes de enviar mensagem...");
           try {
+            console.log("🆕 Criando nova conversa antes de enviar mensagem...");
             const newConversation = await createConversation();
             conversaId = newConversation.conversa_id;
-            setCurrentChatId(conversaId);
-            console.log("✅ Nova conversa criada:", conversaId);
+            setCurrentChatId(conversaId); // Atualiza o estado para futuras mensagens
+            console.log("✅ Nova conversa criada com ID:", conversaId);
           } catch (error) {
             console.error("❌ Erro ao criar conversa:", error);
-            throw new Error("Não foi possível criar uma nova conversa");
+            const errorMessage = {
+              id: crypto.randomUUID(),
+              sender: "bot",
+              text: "Desculpe, não consegui iniciar uma nova conversa. Verifique sua conexão.",
+            };
+            setMessages((prev) => [...prev, errorMessage]);
+            setIsBotTyping(false);
+            return;
           }
         }
-        
-        response = await postMessage(trimmedInput, conversaId, controller.signal);
-        
+  
+        // AGORA, com um ID garantido, envia a mensagem
+        const response = await postMessage(trimmedInput, conversaId);
+  
         if (response.conversa_id && response.conversa_id !== conversaId) {
           setCurrentChatId(response.conversa_id);
         }
-        
-        fetchConversations();
-        
-      } else {
-        response = await conversarAnonimo(trimmedInput, selectedPersona, controller.signal);
-      }
-      
-      if (controller.signal.aborted) return;
-      
-      const botMessage = { 
-        id: crypto.randomUUID(), 
-        sender: "bot", 
-        text: response.resposta, 
-        animate: true 
-      };
-      setMessages((prev) => [...prev, botMessage]);
-      handleAudioPlayback(botMessage.id, response.resposta);
-      
-    } catch (error) {
-      if (error.name !== "AbortError") {
-        console.error("❌ Erro em handleSend:", error);
-        const errorMessage = { 
-          id: crypto.randomUUID(), 
-          sender: "bot", 
-          text: "Desculpe, ocorreu um erro ao processar sua mensagem." 
+  
+        const botMessage = {
+          id: crypto.randomUUID(),
+          sender: "bot",
+          text: response.resposta,
+          animate: true,
         };
-        setMessages((prev) => [...prev, errorMessage]);
-        handleAudioPlayback(errorMessage.id, errorMessage.text);
+        setMessages((prev) => [...prev, botMessage]);
+        handleAudioPlayback(botMessage.id, response.resposta);
+        
+        // Atualiza o histórico após a resposta
+        fetchConversations();
+  
+      } else {
+        // Lógica para usuário anônimo
+        const response = await conversarAnonimo(trimmedInput, selectedPersona);
+        const botMessage = {
+          id: crypto.randomUUID(),
+          sender: "bot",
+          text: response.resposta,
+          animate: true,
+        };
+        setMessages((prev) => [...prev, botMessage]);
+        handleAudioPlayback(botMessage.id, response.resposta);
       }
+  
+    } catch (error) {
+      console.error("❌ Erro em handleSend:", error);
+      const errorMessage = {
+        id: crypto.randomUUID(),
+        sender: "bot",
+        text: "Desculpe, ocorreu um erro ao processar sua mensagem.",
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+      handleAudioPlayback(errorMessage.id, errorMessage.text);
     } finally {
       setIsBotTyping(false);
     }
@@ -416,10 +424,10 @@ function ChatContent() {
     const conversation = conversations.find((c) => c.id === id);
     if (!conversation) return console.error("❌ Conversa não encontrada:", id);
     
-    const historicalMessages = [
-      { id: crypto.randomUUID(), sender: "user", text: conversation.mensagens[0].pergunta, animate: false },
-      { id: crypto.randomUUID(), sender: "bot", text: conversation.mensagens[0].resposta, animate: false },
-    ];
+    const historicalMessages = conversation.mensagens.flatMap((msg) => [
+      { id: crypto.randomUUID(), sender: "user", text: msg.pergunta, animate: false },
+      { id: crypto.randomUUID(), sender: "bot", text: msg.resposta, animate: false },
+    ]);
     
     setCurrentChatId(id);
     setMessages(historicalMessages);
