@@ -1,8 +1,14 @@
+/* ============================================ */
+/* CHATSCREEN STYLES - COMPLETO E CORRIGIDO   */
+/* ============================================ */
+
+/* Container principal do chat - CRÍTICO */
 .galaxy-chat-container {
   position: relative;
-  width: 100vw;
+  width: 100%;
+  max-width: 100vw;
   height: 100vh;
-  overflow-x: hidden;
+  overflow: hidden;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -32,13 +38,10 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
   transition: transform 0.4s ease-in-out;
+  overflow: hidden;
+  position: relative;
 }
 
-.galaxy-chat-area.history-open {
-  /* This transform was pushing the content. It's removed. */
-}
-
-/* Adiciona um overlay escuro quando o histórico está aberto, agora para todas as telas */
 .galaxy-chat-area.history-open::before {
   content: '';
   position: absolute;
@@ -58,6 +61,7 @@
   padding: 1rem 1.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   flex-shrink: 0;
+  min-height: 72px;
 }
 
 .header-title-link {
@@ -71,18 +75,19 @@
 }
 
 .header-logo {
-  height: 40px; /* Ajuste a altura conforme necessário */
+  height: 40px;
+  width: auto;
 }
 
 .header-group-left, .header-group-right {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  flex: 1; /* Ocupa espaço igualmente */
+  flex: 1;
 }
 
 .header-group-right {
-  justify-content: flex-end; /* Alinha ícones à direita */
+  justify-content: flex-end;
 }
 
 .header-icon-btn {
@@ -97,6 +102,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .header-icon-btn:hover {
@@ -111,6 +117,8 @@
   flex-direction: column;
   gap: 1.5rem;
   overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
 }
 
 .galaxy-chat-body::-webkit-scrollbar {
@@ -128,8 +136,11 @@
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
-  max-width: 80%;
+  max-width: 85%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
+
 .message-wrapper.bot {
   align-self: flex-start;
 }
@@ -161,6 +172,8 @@
   flex-direction: column;
   position: relative;
   overflow: visible;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .sender-name {
@@ -176,10 +189,14 @@
 .message {
   padding: 0.8rem 1.2rem;
   line-height: 1.6;
-  white-space: pre-line;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
   color: #f6f4f1;
   font-size: 1rem;
+  max-width: 100%;
 }
+
 .message.bot {
   background: rgba(68, 47, 115, 0.7);
   border-radius: 20px 20px 20px 5px;
@@ -187,6 +204,14 @@
 .message.user {
   background: rgba(99, 68, 166, 0.8);
   border-radius: 20px 20px 5px 20px;
+}
+
+.message pre,
+.message code {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
 }
 
 .message-actions {
@@ -211,6 +236,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .action-btn:hover {
@@ -236,17 +262,24 @@
   background: rgba(10, 5, 30, 0.8);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 24px;
+  flex-shrink: 0;
+  min-height: 64px;
+  max-height: 200px;
 }
+
 .input-icon {
   color: #c9b6f2;
   font-size: 1.4rem;
   opacity: 0.7;
   cursor: pointer;
   transition: opacity 0.2s;
+  flex-shrink: 0;
 }
+
 .input-icon:hover {
   opacity: 1;
 }
+
 .galaxy-chat-input-container textarea {
   flex: 1;
   background: transparent;
@@ -256,17 +289,32 @@
   color: #f6f4f1;
   font-size: 1rem;
   line-height: 1.5;
+  min-height: 24px;
   max-height: 150px;
   padding: 0.5rem;
   overflow-y: auto;
+  overflow-x: hidden;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
+
 .galaxy-chat-input-container textarea::-webkit-scrollbar {
-  width: 0;
+  width: 4px;
+}
+
+.galaxy-chat-input-container textarea::-webkit-scrollbar-track {
   background: transparent;
 }
+
+.galaxy-chat-input-container textarea::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+}
+
 .galaxy-chat-input-container textarea::placeholder {
   color: rgba(246, 244, 241, 0.5);
 }
+
 .send-btn {
   background: #6344a6;
   border: none;
@@ -282,16 +330,19 @@
   font-size: 1.5rem;
   transition: all 0.3s ease;
 }
+
 .send-btn:hover {
   background: #442f73;
   transform: scale(1.1);
 }
+
 .send-btn:disabled {
   background: #261a40;
   cursor: not-allowed;
   opacity: 0.5;
   transform: scale(1);
 }
+
 @keyframes fadeInSlideUp {
   from {
     opacity: 0;
@@ -302,9 +353,11 @@
     transform: translateY(0);
   }
 }
+
 .message-animated {
   animation: fadeInSlideUp 0.5s ease-out forwards;
 }
+
 .typing-indicator {
   display: flex;
   align-items: center;
@@ -312,6 +365,7 @@
   border-radius: 20px 20px 20px 5px;
   background: rgba(68, 47, 115, 0.7);
 }
+
 @keyframes bounce-dot {
   0%,
   80%,
@@ -322,6 +376,7 @@
     transform: scale(1);
   }
 }
+
 .typing-indicator span {
   display: inline-block;
   width: 8px;
@@ -331,6 +386,7 @@
   border-radius: 50%;
   animation: bounce-dot 1.4s infinite ease-in-out both;
 }
+
 .typing-indicator span:nth-child(1) {
   animation-delay: -0.32s;
 }
@@ -351,10 +407,13 @@
   z-index: 100;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
+
 .history-panel.visible {
   transform: translateX(0);
 }
+
 .history-header {
   display: flex;
   justify-content: space-between;
@@ -363,15 +422,19 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   flex-shrink: 0;
 }
+
 .history-header h2 {
   margin: 0;
   font-size: 1.2rem;
 }
+
 .history-list {
   padding: 1rem;
   overflow-y: auto;
+  overflow-x: hidden;
   flex-grow: 1;
 }
+
 .history-item {
   background: rgba(255, 255, 255, 0.05);
   padding: 0.8rem 1rem;
@@ -383,6 +446,7 @@
   text-overflow: ellipsis;
   transition: background 0.2s ease-in-out;
 }
+
 .history-item:hover {
   background: rgba(255, 255, 255, 0.1);
 }
@@ -395,7 +459,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  max-width: 100%;
 }
+
 .lyria-icon-large {
   width: 120px;
   height: 120px;
@@ -423,16 +489,20 @@
 .back-to-home-link:hover {
   color: #fff;
 }
+
 .suggestions-container h2 {
   font-weight: 500;
   margin-bottom: 2rem;
 }
+
 .suggestions-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
   width: 100%;
+  max-width: 600px;
 }
+
 .suggestion-card {
   background: rgba(255, 255, 255, 0.05);
   padding: 1.2rem;
@@ -441,14 +511,19 @@
   transition: background 0.2s ease-in-out;
   border: 1px solid rgba(255, 255, 255, 0.1);
   text-align: left;
+  word-wrap: break-word;
 }
+
 .suggestion-card:hover {
   background: rgba(255, 255, 255, 0.1);
 }
+
 .suggestion-card p {
   margin: 0;
   font-size: 1rem;
+  word-wrap: break-word;
 }
+
 .suggestion-card span {
   font-size: 0.85rem;
   color: #c9b6f2;
@@ -528,6 +603,7 @@
   justify-content: center;
   border-radius: 50%;
   margin-left: 0.5rem;
+  flex-shrink: 0;
 }
 
 .delete-history-btn:hover {
@@ -547,7 +623,7 @@
 
 .attachment-menu {
   position: absolute;
-  bottom: 150%; /* Position it above the input area */
+  bottom: 150%;
   left: 0;
   background: #1e1a3d;
   border-radius: 12px;
@@ -580,7 +656,6 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* Animações para o corpo do chat (Novo Chat) */
 @keyframes chat-fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -599,7 +674,6 @@
   animation: chat-fade-out 0.5s ease-out forwards;
 }
 
-
 @keyframes pulse-mic {
   0% {
     transform: scale(1);
@@ -615,31 +689,60 @@
   }
 }
 
-/* --- Media Queries for Responsiveness --- */
+/* ============================================ */
+/* MEDIA QUERIES - RESPONSIVIDADE MOBILE       */
+/* ============================================ */
+
 @media (max-width: 768px) {
+  .galaxy-chat-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    height: -webkit-fill-available;
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+  }
+
   .galaxy-chat-area {
-    height: 100dvh; /* Usa a altura dinâmica da viewport para se ajustar ao teclado móvel */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    height: -webkit-fill-available;
+    max-width: 100vw;
     max-height: none;
     border-radius: 0;
-    /* The transform is no longer needed here */
+    margin: 0;
+    overflow: hidden;
   }
-
-  .history-panel {
-    width: 85%; /* Ocupa mais espaço na tela */
-    max-width: 320px;
-  }
-
-  /* The overlay is now handled globally */
 
   .galaxy-chat-header {
+    flex-shrink: 0;
+    min-height: 60px;
+    max-height: 60px;
     padding: 0.8rem 1rem;
   }
+
   .galaxy-chat-header h1 {
     font-size: 1.2rem;
   }
+
   .header-icon-btn {
     font-size: 1.3rem;
+    padding: 0.4rem;
   }
+
+  .header-logo {
+    height: 32px;
+    width: auto;
+  }
+
   .voice-select {
     font-size: 0.8rem;
     padding: 0.4rem 0.6rem;
@@ -647,34 +750,172 @@
   }
 
   .galaxy-chat-body {
+    flex: 1;
     padding: 1rem;
     gap: 1.2rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    min-height: 0;
   }
+
   .message-wrapper {
-    max-width: 90%;
+    max-width: 92%;
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .message {
+    font-size: 0.95rem;
+    padding: 0.7rem 1rem;
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+    max-width: 100%;
+  }
+
+  .message pre,
+  .message code {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .avatar-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 1.3rem;
+    flex-shrink: 0;
   }
 
   .galaxy-chat-input-container {
+    position: relative;
     margin: 1rem;
+    padding: 0.6rem;
     gap: 0.5rem;
-    padding: 0.4rem 0.5rem 0.4rem 1rem;
+    min-height: 56px;
+    max-height: 180px;
+    flex-shrink: 0;
   }
+
+  .galaxy-chat-input-container textarea {
+    flex: 1;
+    min-height: 24px;
+    max-height: 120px;
+    font-size: 16px !important;
+    overflow-y: auto;
+    overflow-x: hidden;
+    word-wrap: break-word;
+    word-break: break-word;
+    white-space: pre-wrap;
+  }
+
   .send-btn {
     width: 44px;
     height: 44px;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+  }
+
+  .input-icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+
+  .suggestions-container {
+    padding: 0.5rem;
+  }
+
+  .lyria-icon-large {
+    width: 80px;
+    height: 80px;
+    font-size: 80px;
   }
 
   .suggestions-grid {
-    grid-template-columns: 1fr; /* Coluna única em telas menores */
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+    max-width: 100%;
+  }
+
+  .suggestion-card {
+    padding: 1rem;
+  }
+
+  .action-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+  }
+
+  .history-panel {
+    width: 85vw;
+    max-width: 320px;
+    height: 100vh;
+    height: 100dvh;
+    height: -webkit-fill-available;
   }
 
   .copy-btn {
-    position: static; /* Evita sobreposição em telas pequenas */
+    position: static;
     align-self: flex-end;
     margin-top: 0.5rem;
     margin-right: 0.5rem;
     opacity: 0.7;
     right: auto;
     bottom: auto;
+  }
+
+  * {
+    max-width: 100%;
+  }
+
+  input, textarea, select {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 480px) {
+  .galaxy-chat-header {
+    padding: 0.6rem 0.8rem;
+  }
+
+  .header-logo {
+    height: 28px;
+  }
+
+  .galaxy-chat-body {
+    padding: 0.8rem;
+  }
+
+  .message {
+    font-size: 0.9rem;
+  }
+
+  .galaxy-chat-input-container {
+    margin: 0.8rem;
+    padding: 0.5rem;
+  }
+}
+
+@media (max-width: 768px) and (orientation: landscape) {
+  .galaxy-chat-area {
+    height: 100vh;
+  }
+
+  .galaxy-chat-input-container {
+    margin: 0.5rem;
+    min-height: 48px;
+  }
+
+  .galaxy-chat-body {
+    padding: 0.5rem;
   }
 }

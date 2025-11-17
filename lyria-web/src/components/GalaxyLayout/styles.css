@@ -1,28 +1,75 @@
-/* O contêiner principal que segura tudo e define o contexto de posicionamento */
+/* Container principal - CRÍTICO para prevenir bugs de viewport */
 .galaxy-layout-container {
   width: 100vw;
   height: 100vh;
-  position: relative; /* Essencial para o posicionamento absoluto dos filhos */
-  background-color: #000000; /* Fundo preto visível caso o Galaxy falhe */
-  overflow: hidden; /* Garante que este contêiner não crie barras de rolagem */
+  height: calc(var(--vh, 1vh) * 100); /* Usa altura customizada */
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: #000000;
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
-/* O contêiner do fundo com as estrelas */
+/* Background com estrelas - FIXO */
 .galaxy-layout-background {
-  position: fixed; /* Fica fixo na tela */
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
-  height: 100vh; /* Ocupa a altura inteira da viewport */
-  z-index: 1; /* Camada 1: O fundo */
+  height: 100%;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: auto; /* Permite interação com o canvas */
 }
 
-/* O contêiner do conteúdo da página (Chat, Home, etc.) */
+/* Canvas da Galaxy */
+.galaxy-layout-background canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Container de conteúdo - SCROLLÁVEL */
 .galaxy-layout-content {
-  position: relative; /* Precisa de 'position' para o z-index funcionar */
-  z-index: 2; /* Camada 2: O conteúdo, fica na FRENTE do fundo */
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100%;
-  height: 100%; /* Ocupa a altura do pai (.galaxy-layout-container) */
-  overflow-y: auto; /* Apenas este contêiner terá rolagem vertical */
-  /* Permite que o conteúdo interno (como o chat) tenha sua própria rolagem se necessário */
+  height: 100%;
+  z-index: 2;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Media query para mobile */
+@media (max-width: 768px) {
+  .galaxy-layout-container {
+    height: 100dvh;
+    height: -webkit-fill-available;
+    height: calc(var(--vh, 1vh) * 100);
+  }
+
+  .galaxy-layout-background {
+    height: 100dvh;
+    height: -webkit-fill-available;
+  }
+
+  .galaxy-layout-content {
+    /* Previne problemas quando o teclado virtual aparece */
+    min-height: 100dvh;
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* Para iPhones com notch */
+@supports (padding: max(0px)) {
+  .galaxy-layout-container {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+  }
 }

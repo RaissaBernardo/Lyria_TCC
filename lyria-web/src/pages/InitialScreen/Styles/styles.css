@@ -1,3 +1,7 @@
+/* ============================================ */
+/* INITIALSCREEN STYLES - COMPLETO E CORRIGIDO */
+/* ============================================ */
+
 .galaxy-background {
   position: fixed;
   top: 0;
@@ -124,12 +128,16 @@
 }
 
 .App {
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   display: flex;
   text-align: center;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
+  overflow: hidden;
 }
 
 .main-content {
@@ -138,6 +146,8 @@
   z-index: 1;
   padding: 2rem;
   color: black;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 #comecar {
@@ -224,10 +234,6 @@
   animation: fadeInBackdrop 0.4s ease;
 }
 
-/* ================================================= */
-/* =====         CORREÇÃO DO MODAL (CSS)         ===== */
-/* ================================================= */
-
 .info-modal-content {
   position: relative;
   width: 90%;
@@ -245,22 +251,15 @@
 
   animation: slideInUp 0.5s ease-out;
 
-  /* 1. Limita a altura do modal a 85% da altura da tela */
   max-height: 85vh; 
-  
-  /* 2. Adiciona scroll automático APENAS se o conteúdo passar da altura máxima */
   overflow-y: auto; 
-  
-  /* 3. Garante que o layout interno funcione bem com o scroll */
   display: flex;
   flex-direction: column;
 
-  /* (Opcional) Estilização da barra de scroll */
   scrollbar-width: thin;
   scrollbar-color: rgba(201, 182, 242, 0.5) transparent;
 }
 
-/* (Opcional) Estilização da barra de scroll para Chrome/Safari */
 .info-modal-content::-webkit-scrollbar {
   width: 8px;
 }
@@ -275,11 +274,6 @@
   border: 2px solid transparent;
   background-clip: content-box;
 }
-
-/* ================================================= */
-/* ====== FIM DAS ALTERAÇÕES NO MODAL (CSS) ====== */
-/* ================================================= */
-
 
 .info-modal-content h2 {
   font-size: 1.3rem;
@@ -454,84 +448,6 @@
   gap: 10px;
 }
 
-@media (max-width: 992px) {
-  .app-header {
-    width: 90%;
-    top: 20px;
-  }
-
-  .main-content {
-    width: 100%;
-    margin-left: 0;
-    padding: 2rem;
-  }
-
-  #frase_efeito {
-    font-size: 32px;
-  }
-}
-
-@media (max-width: 768px) {
-  .app-header {
-    height: 60px;
-    padding: 0 15px;
-  }
-
-  .logo-image {
-    height: 50%;
-  }
-
-  .app-header nav {
-    flex: 1;
-    justify-content: flex-end;
-  }
-  
-  .nav-actions {
-    display: flex;
-    gap: 10px;
-  }
-  
-  .nav-actions .nav-button {
-    font-size: 0.9rem;
-    padding: 8px 12px;
-  }
-
-  #frase_efeito {
-    font-size: 28px;
-  }
-  
-  .botoes-container {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  #comecar, #sobre {
-    font-size: 1rem;
-    padding: 18px 40px;
-    width: 100%;
-    max-width: 300px;
-    margin-left: 0;
-  }
-}
-
-@media (max-width: 480px) {
-  .app-header nav a {
-    font-size: 0.9rem;
-  }
-
-  .logo-image {
-    height: 45%;
-  }
-  
-  .nav-actions {
-    gap: 5px;
-  }
-  
-  .nav-actions .nav-button {
-    padding: 6px 10px;
-  }
-}
-
 .contact-info {
   margin-top: 1.3rem;
 }
@@ -557,8 +473,8 @@
   text-decoration: none;
   color: var(--color-off-white);
   transition: background-color 0.3s;
-  pointer-events: auto; /* Garante que o link seja clicável */
-  z-index: 10; /* Garante que esteja acima de outros elementos */
+  pointer-events: auto;
+  z-index: 10;
 }
 
 .contact-link-item:hover {
@@ -568,4 +484,123 @@
 .contact-link-item svg {
   font-size: 1.5rem;
   color: var(--color-light-purple);
+}
+
+/* ============================================ */
+/* MEDIA QUERIES - RESPONSIVIDADE MOBILE       */
+/* ============================================ */
+
+@media (max-width: 992px) {
+  .app-header {
+    width: 90%;
+    top: 20px;
+  }
+
+  .main-content {
+    width: 100%;
+    margin-left: 0;
+    padding: 2rem;
+  }
+
+  #frase_efeito {
+    font-size: 32px;
+  }
+}
+
+@media (max-width: 768px) {
+  .App {
+    height: 100dvh;
+    height: -webkit-fill-available;
+  }
+
+  .app-header {
+    height: 60px;
+    padding: 0 15px;
+    top: 20px;
+    width: 90%;
+    max-width: 90vw;
+  }
+
+  .logo-image {
+    height: 40px;
+    width: auto;
+  }
+
+  .app-header nav {
+    flex: 1;
+    justify-content: flex-end;
+  }
+  
+  .nav-actions {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .nav-actions .nav-button {
+    font-size: 0.9rem;
+    padding: 8px 12px;
+  }
+
+  .main-content {
+    padding: 1rem;
+    width: 100%;
+    overflow: visible;
+  }
+
+  #frase_efeito {
+    font-size: clamp(24px, 6vw, 40px);
+    padding: 0 1rem;
+    word-wrap: break-word;
+  }
+  
+  .botoes-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+  }
+
+  #comecar, #sobre {
+    font-size: 1rem;
+    padding: 18px 40px;
+    width: 100%;
+    max-width: 300px;
+    margin-left: 0;
+    margin: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-header {
+    top: 15px;
+    width: 95%;
+  }
+
+  .app-header nav a {
+    font-size: 0.9rem;
+  }
+
+  .logo-image {
+    height: 32px;
+  }
+  
+  .nav-actions {
+    gap: 5px;
+  }
+  
+  .nav-actions .nav-button {
+    padding: 6px 10px;
+  }
+
+  #frase_efeito {
+    font-size: 24px;
+  }
+
+  #comecar,
+  #sobre {
+    font-size: 0.95rem;
+    padding: 16px 32px;
+  }
 }

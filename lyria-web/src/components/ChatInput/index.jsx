@@ -1,4 +1,4 @@
-import { FiSend, FiPaperclip, FiMic } from "react-icons/fi";
+import { FiSend, FiMic } from "react-icons/fi";
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "../../context/ToastContext";
 
@@ -14,19 +14,42 @@ const ChatInput = ({
   const textareaRef = useRef(null);
   const { addToast } = useToast();
 
+  // Ajusta altura do textarea dinamicamente
   useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      const scrollHeight = textareaRef.current.scrollHeight;
-      textareaRef.current.style.height = `${scrollHeight}px`;
-    }
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    // Reset para calcular altura correta
+    textarea.style.height = "auto";
+    
+    // Calcula nova altura (limitada a 120px em mobile, 150px em desktop)
+    const isMobile = window.innerWidth <= 768;
+    const maxHeight = isMobile ? 120 : 150;
+    const scrollHeight = textarea.scrollHeight;
+    const newHeight = Math.min(scrollHeight, maxHeight);
+    
+    textarea.style.height = `${newHeight}px`;
   }, [input]);
 
   const handleKeyDown = (event) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
-      handleSend();
+      handleSendClick();
     }
+  };
+
+  const handleSendClick = () => {
+    if (!input.trim() || isBotTyping || isListening) return;
+    
+    handleSend();
+    
+    // CRÍTICO: Reset da altura após enviar
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.style.height = "auto";
+        textareaRef.current.style.height = "24px"; // Altura mínima
+      }
+    }, 0);
   };
 
   return (
@@ -72,13 +95,14 @@ const ChatInput = ({
         placeholder="Digite sua mensagem para LyrIA..."
         rows="1"
         disabled={isBotTyping || isListening}
+        style={{ minHeight: '24px' }} // Garante altura mínima inline
       />
       <FiMic
         className={`input-icon mic-icon ${isListening ? "listening" : ""}`}
         onClick={handleMicClick}
       />
       <button
-        onClick={() => handleSend()}
+        onClick={handleSendClick}
         disabled={!input.trim() || isBotTyping || isListening}
         className="send-btn"
       >
