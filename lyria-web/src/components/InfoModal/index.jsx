@@ -21,10 +21,10 @@ function InfoModal({ isVisible, isClosing, onClose }) {
         
         <h2>Sobre a LyrIA</h2>
         <p>
-          LyrIA é uma assistente virtual de última geração, projetada para ser sua companheira em um universo de conhecimento e criatividade.
+        Lyria é uma Assistente de Inteligência Artificial Personalizada, redefinindo o conceito de suporte inteligente e adaptável. É  uma plataforma que se molda às suas necessidades, seja no âmbito pessoal, acadêmico ou profissional.
         </p>
         <p>
-          Nossa missão é fornecer respostas rápidas, insights valiosos e ajudar você a explorar novas ideias de forma intuitiva e eficiente. Construída com as mais recentes tecnologias de inteligência artificial, a LyrIA aprende e se adapta às suas necessidades.
+        Nossa missão é otimizar a sua jornada de conhecimento, assegurando a entrega de respostas  rápidas, informações fundamentadas e auxiliando você a explorar novas ideias de forma intuitiva e eficiente. O projeto se diferencia ao oferecer suporte complementar através do nosso robô físico, estabelecendo uma presença integrada e única de Inteligência Artificial Web e Sistema Físico. A LyrIA é totalmente customizável, com aprendizado contínuo que a torna exponencialmente mais eficiente e perfeitamente alinhada às suas demandas exclusivas.
         </p>
         
         <h3>Funcionalidades Principais:</h3>
