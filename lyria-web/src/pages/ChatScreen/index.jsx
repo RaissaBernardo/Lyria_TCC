@@ -75,6 +75,7 @@ function ChatContent() {
   const [selectedPersona, setSelectedPersona] = useState("professor");
   const [isSettingsModalVisible, setSettingsModalVisible] = useState(false);
   const [isPageVisible, setIsPageVisible] = useState(true);
+  const [isConversationStarted, setIsConversationStarted] = useState(false);
 
   useEffect(() => {
     const fetchPersonas = async () => {
@@ -234,6 +235,10 @@ function ChatContent() {
   const handleSend = async (textToSend) => {
     const trimmedInput = (typeof textToSend === "string" ? textToSend : input).trim();
     if (!trimmedInput || isBotTyping || isListening) return;
+
+    if (!isConversationStarted) {
+      setIsConversationStarted(true);
+    }
     
     requestCancellationRef.current?.cancel();
     
@@ -379,6 +384,7 @@ function ChatContent() {
 
     setTimeout(async () => {
       setMessages([]);
+      setIsConversationStarted(false);
       if (isAuthenticated) {
         try {
           const response = await createConversation();
@@ -515,6 +521,7 @@ function ChatContent() {
         availableVoices={availableVoices}
         selectedVoice={selectedVoice}
         onVoiceChange={handleVoiceChange}
+        isConversationStarted={isConversationStarted}
       />
       
       <HistoryPanel

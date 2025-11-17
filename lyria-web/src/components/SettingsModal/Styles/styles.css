@@ -97,6 +97,13 @@
     box-shadow: 0 0 0 3px rgba(201, 182, 242, 0.3);
 }
 
+.persona-lock-message {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: #c9b6f2;
+  text-align: center;
+}
+
 /* Animação de entrada */
 @keyframes fadeIn {
     from {
