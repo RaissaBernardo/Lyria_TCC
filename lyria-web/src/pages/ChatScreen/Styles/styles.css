@@ -177,6 +177,7 @@
   padding: 0.8rem 1.2rem;
   line-height: 1.6;
   white-space: pre-line;
+  word-break: break-word; /* Garante que palavras longas não quebrem o layout */
   color: #f6f4f1;
   font-size: 1rem;
 }
