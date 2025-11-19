@@ -27,8 +27,17 @@
   font-family: var(--font-family-main);
 }
 
-body {
-  background-color: #000; /* Garante que não haja "flash branco" */
-  overflow-x: hidden;
-  overflow-y: hidden; /* A rolagem é controlada pelo .galaxy-layout-content */
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: #000;
+  position: fixed;
+  overscroll-behavior: none;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }

@@ -16,9 +16,20 @@ const ChatInput = ({
 
   useEffect(() => {
     if (textareaRef.current) {
+      // Reset height to get accurate scrollHeight
       textareaRef.current.style.height = "auto";
+      
       const scrollHeight = textareaRef.current.scrollHeight;
-      textareaRef.current.style.height = `${scrollHeight}px`;
+      const maxHeight = window.innerWidth <= 768 ? 100 : 120; // Mobile vs Desktop
+      
+      // Set height with max constraint
+      if (scrollHeight > maxHeight) {
+        textareaRef.current.style.height = `${maxHeight}px`;
+        textareaRef.current.style.overflowY = "auto";
+      } else {
+        textareaRef.current.style.height = `${scrollHeight}px`;
+        textareaRef.current.style.overflowY = "hidden";
+      }
     }
   }, [input]);
 
@@ -28,6 +39,25 @@ const ChatInput = ({
       handleSend();
     }
   };
+
+  // Previne zoom no iOS quando o teclado aparece
+  useEffect(() => {
+    const preventZoom = (e) => {
+      if (e.touches.length > 1) {
+        e.preventDefault();
+      }
+    };
+
+    if (textareaRef.current) {
+      textareaRef.current.addEventListener('touchstart', preventZoom, { passive: false });
+    }
+
+    return () => {
+      if (textareaRef.current) {
+        textareaRef.current.removeEventListener('touchstart', preventZoom);
+      }
+    };
+  }, []);
 
   return (
     <footer className="galaxy-chat-input-container">
@@ -72,6 +102,7 @@ const ChatInput = ({
         placeholder="Digite sua mensagem para LyrIA..."
         rows="1"
         disabled={isBotTyping || isListening}
+        style={{ minHeight: '24px' }} // Altura mínima inline
       />
       <FiMic
         className={`input-icon mic-icon ${isListening ? "listening" : ""}`}

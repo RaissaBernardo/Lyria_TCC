@@ -13,6 +13,7 @@ import {
 } from "../../services/LyriaApi";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
+import useViewportHeight from "../../hooks/useViewportHeight"; // NOVO HOOK
 import {
   SpeechConfig,
   AudioConfig,
@@ -49,6 +50,10 @@ function ChatContent() {
   const location = useLocation();
   const navigate = useNavigate();
   const { addToast } = useToast();
+  
+  // NOVO: Hook para corrigir altura da viewport
+  useViewportHeight();
+  
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isBotTyping, setIsBotTyping] = useState(false);
@@ -164,30 +169,39 @@ function ChatContent() {
     speechConfig.speechSynthesisVoiceName = selectedVoice;
   }, [selectedVoice]);
 
+  // MELHORADO: Auto-scroll mais robusto
   useEffect(() => {
     const chatBody = chatBodyRef.current;
     if (!chatBody) return;
 
     const scrollToBottom = () => {
-      chatBody.scrollTop = chatBody.scrollHeight;
+      requestAnimationFrame(() => {
+        chatBody.scrollTop = chatBody.scrollHeight;
+      });
     };
 
+    // Scroll imediato
     scrollToBottom();
 
-    const observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        if (mutation.type === 'childList') {
-          scrollToBottom();
-        }
-      }
+    // Observer para mudanças no DOM
+    const observer = new MutationObserver(() => {
+      scrollToBottom();
     });
 
-    observer.observe(chatBody, { childList: true, subtree: true });
+    observer.observe(chatBody, { 
+      childList: true, 
+      subtree: true,
+      characterData: true // ADICIONADO: Observa mudanças em texto
+    });
+
+    // Timeout adicional para garantir scroll após renderização
+    const timeoutId = setTimeout(scrollToBottom, 100);
 
     return () => {
       observer.disconnect();
+      clearTimeout(timeoutId);
     };
-  }, [messages]);
+  }, [messages, isBotTyping]);
 
   const stripMarkdown = (text = "") => {
     return text
@@ -232,6 +246,9 @@ function ChatContent() {
     );
   };
 
+  // Continua na próxima parte...
+  // Continuação do ChatContent...
+
   const handleSend = async (textToSend) => {
     const trimmedInput = (typeof textToSend === "string" ? textToSend : input).trim();
     if (!trimmedInput || isBotTyping || isListening) return;
@@ -249,13 +266,12 @@ function ChatContent() {
       let conversaId = currentChatId;
   
       if (isAuthenticated && user) {
-        // Se não houver ID, cria uma nova conversa PRIMEIRO
         if (!conversaId) {
           try {
             console.log("🆕 Criando nova conversa antes de enviar mensagem...");
             const newConversation = await createConversation();
             conversaId = newConversation.conversa_id;
-            setCurrentChatId(conversaId); // Atualiza o estado para futuras mensagens
+            setCurrentChatId(conversaId);
             console.log("✅ Nova conversa criada com ID:", conversaId);
           } catch (error) {
             console.error("❌ Erro ao criar conversa:", error);
@@ -270,7 +286,6 @@ function ChatContent() {
           }
         }
   
-        // AGORA, com um ID garantido, envia a mensagem
         const response = await postMessage(trimmedInput, conversaId);
   
         if (response.conversa_id && response.conversa_id !== conversaId) {
@@ -286,11 +301,9 @@ function ChatContent() {
         setMessages((prev) => [...prev, botMessage]);
         handleAudioPlayback(botMessage.id, response.resposta);
         
-        // Atualiza o histórico após a resposta
         fetchConversations();
   
       } else {
-        // Lógica para usuário anônimo
         const response = await conversarAnonimo(trimmedInput, selectedPersona);
         const botMessage = {
           id: crypto.randomUUID(),
@@ -409,7 +422,6 @@ function ChatContent() {
       }
       setChatBodyAnimationClass("fade-in");
       
-      // Reset the flag after the new chat is set up
       setTimeout(() => {
         isNewChatFlow.current = false;
         setIsStartingNewChat(false);
