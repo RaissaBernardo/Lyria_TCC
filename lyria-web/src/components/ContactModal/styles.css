@@ -1,0 +1,294 @@
+.contact-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: fadeInBackdrop 0.4s ease;
+  padding: 20px;
+}
+
+.contact-modal-backdrop.fade-out {
+  animation: fadeOutBackdrop 0.5s ease-out forwards;
+}
+
+.contact-modal-wrapper {
+  background: rgba(13, 15, 47, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1.5px solid rgba(201, 182, 242, 0.2);
+  border-radius: 24px;
+  padding: 2.5rem;
+  width: 100%;
+  max-width: 1200px;
+  max-height: 90vh;
+  overflow-y: auto;
+  color: white;
+  position: relative;
+  animation: slideInUp 0.5s ease-out;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.contact-modal-wrapper.slide-out {
+  animation: slideOutDown 0.5s ease-out forwards;
+}
+
+.contact-close-btn {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1.8rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 10;
+  width: 40px;
+  height: 40px;
+  borderRadius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.contact-close-btn:hover {
+  color: white;
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: rotate(90deg);
+}
+
+.contact-header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.contact-header h2 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, #c9b6f2 0%, #9d7fd9 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+}
+
+.contact-header p {
+  font-size: 1.1rem;
+  color: rgba(246, 244, 241, 0.85);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.team-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.team-card.hovered {
+  background: rgba(99, 68, 166, 0.15);
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px rgba(99, 68, 166, 0.3);
+}
+
+.team-card:not(.hovered) {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.team-card-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.member-photo-wrapper {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid rgba(201, 182, 242, 0.5);
+  box-shadow: 0 4px 20px rgba(201, 182, 242, 0.2);
+  transition: all 0.3s ease;
+}
+
+.team-card.hovered .member-photo-wrapper {
+  transform: scale(1.05);
+}
+
+.member-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.member-info {
+  text-align: center;
+  width: 100%;
+}
+
+.member-name {
+  font-size: 1.4rem;
+  margin-bottom: 0.25rem;
+  color: #c9b6f2;
+  font-weight: 600;
+}
+
+.member-role {
+  font-size: 0.95rem;
+  color: rgba(246, 244, 241, 0.9);
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.member-area {
+  font-size: 0.85rem;
+  color: rgba(246, 244, 241, 0.7);
+  line-height: 1.4;
+  min-height: 40px;
+}
+
+.member-links {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  width: 100%;
+  justify-content: center;
+}
+
+.social-link {
+  color: #c9b6f2;
+  font-size: 1.8rem;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  text-decoration: none;
+}
+
+.social-link:hover {
+  color: white;
+  background: rgba(201, 182, 242, 0.2);
+  transform: translateY(-3px);
+}
+
+/* Animações */
+@keyframes fadeInBackdrop {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOutBackdrop {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes slideOutDown {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(30px) scale(0.98);
+  }
+}
+
+/* Scrollbar personalizada */
+.contact-modal-wrapper::-webkit-scrollbar {
+  width: 8px;
+}
+
+.contact-modal-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.contact-modal-wrapper::-webkit-scrollbar-thumb {
+  background-color: rgba(201, 182, 242, 0.5);
+  border-radius: 10px;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .contact-modal-wrapper {
+    padding: 1.5rem;
+    margin: 10px;
+  }
+  
+  .contact-header h2 {
+    font-size: 2rem;
+  }
+  
+  .team-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .contact-close-btn {
+    top: 1rem;
+    right: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .contact-modal-wrapper {
+    padding: 1rem;
+  }
+
+  .contact-header h2 {
+    font-size: 1.8rem;
+  }
+
+  .contact-header p {
+    font-size: 1rem;
+  }
+
+  .member-photo-wrapper {
+    width: 100px;
+    height: 100px;
+  }
+
+  .member-name {
+    font-size: 1.2rem;
+  }
+
+  .team-card {
+    padding: 1.25rem;
+  }
+}
