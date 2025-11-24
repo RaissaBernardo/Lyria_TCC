@@ -28,7 +28,7 @@ const teamMembers = [
     area: "Design de Interface & Desenvolvedor Front-End",
     image: "https://avatars.githubusercontent.com/u/185539213?v=4",
     github: "https://github.com/JoaoBiel11",
-    linkedin: "https://linkedin.com/in/joaobiel11"
+    linkedin: "https://www.linkedin.com/in/joão-gabriel-673803392?utm_source=share_via&utm_content=profile&utm_medium=member_ios"
   },
   {
     id: 4,
