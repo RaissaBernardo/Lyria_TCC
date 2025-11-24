@@ -19,7 +19,8 @@ def criar_banco():
         criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         ultimo_acesso TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         token_redefinicao_senha TEXT,
-        token_redefinicao_expiracao TIMESTAMP
+        token_redefinicao_expiracao TIMESTAMP,
+        foto_perfil TEXT
     );
     """)
 
@@ -92,6 +93,21 @@ def criar_banco():
     conn.commit()
     conn.close()
 
+def atualizar_schema_usuarios():
+    """Verifica e adiciona colunas novas na tabela usuarios se não existirem."""
+    conn = psycopg2.connect(DB_URL)
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS foto_perfil TEXT;
+        """)
+        conn.commit()
+        print("✅ Schema de usuários atualizado com sucesso.")
+    except Exception as e:
+        print(f"⚠️ Erro ao atualizar schema: {e}")
+    finally:
+        conn.close()
+
 def pegarPersonaEscolhida(usuario):
     conn = psycopg2.connect(DB_URL)
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
@@ -162,6 +178,39 @@ def atualizar_senha(token, nova_senha_hash):
         SET senha_hash = %s, token_redefinicao_senha = NULL, token_redefinicao_expiracao = NULL
         WHERE token_redefinicao_senha = %s
     """, (nova_senha_hash, token))
+    conn.commit()
+    conn.close()
+
+def atualizar_senha_por_email(email, nova_senha_hash):
+    conn = psycopg2.connect(DB_URL)
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE usuarios
+        SET senha_hash = %s
+        WHERE email = %s
+    """, (nova_senha_hash, email))
+    conn.commit()
+    conn.close()
+
+def atualizar_perfil(email_atual, novo_nome, novo_email):
+    conn = psycopg2.connect(DB_URL)
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE usuarios
+        SET nome = %s, email = %s
+        WHERE email = %s
+    """, (novo_nome, novo_email, email_atual))
+    conn.commit()
+    conn.close()
+
+def atualizar_foto_perfil(email, caminho_foto):
+    conn = psycopg2.connect(DB_URL)
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE usuarios
+        SET foto_perfil = %s
+        WHERE email = %s
+    """, (caminho_foto, email))
     conn.commit()
     conn.close()
 

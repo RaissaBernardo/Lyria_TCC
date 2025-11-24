@@ -24,7 +24,12 @@ export const AuthProvider = ({ children }) => {
           const userData = storedUser ? JSON.parse(storedUser) : {
             nome: response.data.usuario,
             email: response.data.email,
+            foto_perfil: response.data.foto_perfil
           };
+
+          if (response.data.foto_perfil && userData.foto_perfil !== response.data.foto_perfil) {
+              userData.foto_perfil = response.data.foto_perfil;
+          }
           
           setUser(userData);
           setIsAuthenticated(true);
@@ -71,7 +76,8 @@ export const AuthProvider = ({ children }) => {
         const userData = {
           nome: response.usuario,
           email: credentials.email,
-          persona: response.persona
+          persona: response.persona,
+          foto_perfil: response.foto_perfil
         };
         
         setUser(userData);

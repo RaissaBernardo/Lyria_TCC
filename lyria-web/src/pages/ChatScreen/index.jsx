@@ -13,7 +13,6 @@ import {
 } from "../../services/LyriaApi";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
-import useViewportHeight from "../../hooks/useViewportHeight"; // NOVO HOOK
 import {
   SpeechConfig,
   AudioConfig,
@@ -50,9 +49,6 @@ function ChatContent() {
   const location = useLocation();
   const navigate = useNavigate();
   const { addToast } = useToast();
-  
-  // NOVO: Hook para corrigir altura da viewport
-  useViewportHeight();
   
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");

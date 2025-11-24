@@ -48,9 +48,9 @@ function Header({
                 className="user-indicator"
                 onClick={handleUserClick}
               >
-                {user?.foto_perfil_url ? (
+                {user?.foto_perfil ? (
                   <img
-                    src={`${baseURL}${user.foto_perfil_url}`}
+                    src={`${baseURL}${user.foto_perfil}`}
                     alt="Foto de perfil"
                     className="user-profile-pic"
                   />

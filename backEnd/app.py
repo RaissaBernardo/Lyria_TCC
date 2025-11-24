@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, jsonify, session
+from flask import Flask, request, jsonify, session, send_from_directory
 from flask_cors import CORS
 from waitress import serve
 from flask_session import Session
@@ -8,12 +8,15 @@ from sendgrid.helpers.mail import Mail
 from testeDaIa import perguntar_ollama, buscar_na_web, get_persona_texto
 import secrets
 from datetime import datetime, timedelta
+import bcrypt
+from werkzeug.utils import secure_filename
 from banco.banco import (
     criar_banco, criarUsuario, procurarUsuarioPorEmail,
     pegarHistorico, salvarMensagem, carregar_conversas, carregar_memorias,
     pegarPersonaEscolhida, escolherApersona, deleta_conversa, criar_nova_conversa,
     salvar_token_redefinicao, procurarUsuarioPorToken, atualizar_senha,
-    carregar_mensagens_por_conversa_id
+    carregar_mensagens_por_conversa_id, atualizar_schema_usuarios,
+    atualizar_perfil, atualizar_senha_por_email, atualizar_foto_perfil
 )
 from classificadorDaWeb.classificador_busca_web import deve_buscar_na_web
 
@@ -31,6 +34,14 @@ app.config.update(
 )
 
 Session(app)
+
+# Configuração de Uploads
+UPLOAD_FOLDER = 'uploads'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
 
 allowed_origins = [
     "http://localhost:5173",
@@ -50,6 +61,7 @@ CORS(
 
 try:
     criar_banco()
+    atualizar_schema_usuarios()
     print("✅ Tabelas criadas/verificadas com sucesso!")
 except Exception as e:
     print(f"❌ Erro ao criar tabelas: {e}")
@@ -104,7 +116,8 @@ def login():
             "mensagem": "Login realizado com sucesso",
             "usuario": usuario['nome'],
             "persona": usuario.get('persona_escolhida'),
-            "conversa_id": None  # Sem conversa inicial
+            "conversa_id": None,  # Sem conversa inicial
+            "foto_perfil": usuario.get('foto_perfil')
         })
         
         return response
@@ -422,12 +435,26 @@ def check_session():
     print(f"🍪 Cookies recebidos: {request.cookies}")
     print(f"📋 Sessão atual: {dict(session)}")
     
-    usuario = verificar_login()
-    if usuario:
+    usuario_email = verificar_login()
+    if usuario_email:
+        try:
+            dados_usuario = procurarUsuarioPorEmail(usuario_email)
+            if dados_usuario:
+                 return jsonify({
+                    "autenticado": True,
+                    "usuario": session.get('usuario_nome'),
+                    "email": usuario_email,
+                    "conversa_id": session.get('conversa_id'),
+                    "session_id": request.cookies.get('lyria_session', 'Não encontrado'),
+                    "foto_perfil": dados_usuario.get('foto_perfil')
+                })
+        except Exception as e:
+            print(f"Erro ao buscar dados do usuario na sessao: {e}")
+
         return jsonify({
             "autenticado": True,
             "usuario": session.get('usuario_nome'),
-            "email": usuario,
+            "email": usuario_email,
             "conversa_id": session.get('conversa_id'),
             "session_id": request.cookies.get('lyria_session', 'Não encontrado')
         })
@@ -437,6 +464,108 @@ def check_session():
         "mensagem": "Nenhuma sessão ativa"
     }), 401
 
+@app.route('/Lyria/usuarios/perfil', methods=['PUT'])
+def atualizar_perfil_route():
+    usuario_email = verificar_login()
+    if not usuario_email:
+        return jsonify({"erro": "Usuário não está logado"}), 401
+
+    data = request.get_json() or {}
+    novo_nome = data.get('nome')
+    novo_email = data.get('email')
+
+    if not novo_nome or not novo_email:
+        return jsonify({"erro": "Campos 'nome' e 'email' são obrigatórios"}), 400
+
+    try:
+        # Se o email mudou, verificar se já existe
+        if novo_email != usuario_email:
+            existente = procurarUsuarioPorEmail(novo_email)
+            if existente:
+                return jsonify({"erro": "Este e-mail já está em uso"}), 409
+
+        atualizar_perfil(usuario_email, novo_nome, novo_email)
+
+        # Atualizar sessão
+        session['usuario_email'] = novo_email
+        session['usuario_nome'] = novo_nome
+        session.modified = True
+
+        return jsonify({"sucesso": "Perfil atualizado com sucesso"}), 200
+    except Exception as e:
+        print(f"❌ Erro em atualizar_perfil_route: {e}")
+        return jsonify({"erro": str(e)}), 500
+
+@app.route('/Lyria/usuarios/senha-logado', methods=['PUT'])
+def atualizar_senha_logado_route():
+    usuario_email = verificar_login()
+    if not usuario_email:
+        return jsonify({"erro": "Usuário não está logado"}), 401
+
+    data = request.get_json() or {}
+    senha_atual = data.get('senha_atual')
+    nova_senha = data.get('nova_senha')
+
+    if not senha_atual or not nova_senha:
+        return jsonify({"erro": "Campos 'senha_atual' e 'nova_senha' são obrigatórios"}), 400
+
+    try:
+        usuario = procurarUsuarioPorEmail(usuario_email)
+        if not usuario:
+            return jsonify({"erro": "Usuário não encontrado"}), 404
+
+        senha_hash_atual = usuario.get('senha_hash')
+        if not bcrypt.checkpw(senha_atual.encode('utf-8'), senha_hash_atual.encode('utf-8')):
+            return jsonify({"erro": "Senha atual incorreta"}), 401
+
+        nova_senha_hash = bcrypt.hashpw(nova_senha.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        atualizar_senha_por_email(usuario_email, nova_senha_hash)
+
+        return jsonify({"sucesso": "Senha atualizada com sucesso"}), 200
+    except Exception as e:
+        print(f"❌ Erro em atualizar_senha_logado_route: {e}")
+        return jsonify({"erro": str(e)}), 500
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/Lyria/usuarios/foto', methods=['POST'])
+def upload_foto_perfil():
+    usuario_email = verificar_login()
+    if not usuario_email:
+        return jsonify({"erro": "Usuário não está logado"}), 401
+
+    if 'foto' not in request.files:
+        return jsonify({"erro": "Nenhuma imagem enviada"}), 400
+
+    file = request.files['foto']
+
+    if file.filename == '':
+        return jsonify({"erro": "Nenhuma imagem selecionada"}), 400
+
+    if file and allowed_file(file.filename):
+        try:
+            filename = secure_filename(file.filename)
+            # Adicionar timestamp ou ID do usuário para evitar colisões/cache
+            ext = filename.rsplit('.', 1)[1].lower()
+            novo_nome = f"profile_{int(datetime.now().timestamp())}.{ext}"
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], novo_nome))
+
+            # URL relativa para salvar no banco
+            url_foto = f"/uploads/{novo_nome}"
+
+            atualizar_foto_perfil(usuario_email, url_foto)
+
+            return jsonify({"sucesso": "Foto atualizada com sucesso", "url": url_foto}), 200
+        except Exception as e:
+            print(f"❌ Erro ao salvar foto: {e}")
+            return jsonify({"erro": str(e)}), 500
+
+    return jsonify({"erro": "Formato de arquivo não permitido"}), 400
+
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
