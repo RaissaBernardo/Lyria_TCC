@@ -1,12 +1,14 @@
 .galaxy-chat-container {
   position: relative;
   width: 100%;
-  height: 100%;
+  min-height: 100vh; /* Changed from height: 100% to ensure full viewport coverage */
+  height: auto;
   display: flex;
   justify-content: center;
   align-items: center;
   color: #f0f0f0;
   padding: 1rem;
+  box-sizing: border-box; /* Added to handle padding correctly */
 }
 
 .galaxy-background {
@@ -233,7 +235,7 @@
 
 .galaxy-chat-input-container {
   display: flex;
-  align-items: flex-end;
+  align-items: center; /* Changed from flex-end to center for vertical alignment */
   gap: 1rem;
   margin: 1.5rem;
   padding: 0.5rem 0.7rem 0.5rem 1.5rem;
@@ -411,12 +413,13 @@
   background: rgba(255, 255, 255, 0.05);
   padding: 0.8rem 1rem;
   border-radius: 8px;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0; /* Changed from 0.5rem to 0 to rely on container spacing */
   cursor: pointer;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   transition: background 0.2s ease-in-out;
+  flex-grow: 1; /* Added to ensure item fills available space */
 }
 
 .history-item:hover {
@@ -540,6 +543,7 @@
   display: flex;
   align-items: center;
   margin-bottom: 0.5rem;
+  width: 100%; /* Added to ensure full width */
 }
 
 .delete-history-btn {
